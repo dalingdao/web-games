@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🎮 网页游戏仓库</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(135deg,#1a2a3a,#0d1b2a);min-height:100vh;color:#fff;padding:20px}
+.container{max-width:800px;margin:0 auto}
+h1{text-align:center;font-size:2em;margin:20px 0 8px}
+.sub{text-align:center;color:#8aa;margin-bottom:30px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px}
+.card{background:#16283a;border-radius:16px;overflow:hidden;transition:transform .2s,box-shadow .2s;text-decoration:none;color:#fff;border:1px solid #234}
+.card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.thumb{height:140px;display:flex;align-items:center;justify-content:center;font-size:4em;background:linear-gradient(135deg,#2a5a3a,#1a3a2a)}
+.card-body{padding:16px}
+.card-body h2{font-size:1.2em;margin-bottom:6px}
+.card-body p{color:#9ab;font-size:.9em;line-height:1.4}
+.badge{display:inline-block;background:#2ecc71;color:#fff;font-size:.7em;padding:2px 8px;border-radius:10px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🎮 网页游戏仓库</h1>
+<p class="sub">通过 GitHub Pages 静态页面在线游玩的网页游戏合集</p>
+<div class="grid">
+<a class="card" href="whack-a-mole/game_mole.html">
+  <div class="thumb">🐹</div>
+  <div class="card-body">
+    <h2>打地鼠</h2>
+    <p>点击从洞里冒出的地鼠得分，避开炸弹，抢金地鼠。移动优先，离线可玩。</p>
+    <span class="badge">可玩</span>
+  </div>
+</a>
+</div>
+</div>
+</body>
+</html>
