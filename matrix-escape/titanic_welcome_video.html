@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>欢迎视频 - 20秒精彩片段</title>
+  <style>
+    body { margin: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif; }
+    h1 { color: #fff; font-size: 2.5em; margin-bottom: 20px; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+    .video-container { position: relative; width: 720px; height: 1280px; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.8); }
+    video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    .title { color: #fff; font-size: 2.2em; text-align: center; text-shadow: 0 0 15px rgba(255,255,255,0.8); }
+    .subtitle { color: #ccc; font-size: 1.2em; margin-top: 15px; text-align: center; }
+    .welcome { color: #ffd700; font-size: 1.5em; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>🎬 Titanic - 20秒精彩片段</h袖口
+  <div class="video-container">
+    <video id="video" playsinline autoplay muted loop>
+      <source src="http://192.168.1.8:8022/titanic_welcome_video.mp4" type="video/mp4">
+      浏览器不支持 video 元素。
+    </video>
+    <div class="overlay">
+      <div>
+        <div class="title">《泰坦尼克》</div>
+        <div class="subtitle">船头飞翔 - 经典镜头</div>
+        <div class="welcome">欢迎观看！</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 自动播放提示
+    const video = document.getElementById('video');
+    video.addEventListener('loadeddata', () => {
+      console.log('视频已加载');
+    });
+    video.addEventListener('error', (e) => {
+      console.error('视频加载失败:', e);
+    });
+  </script>
+</body>
+</html>

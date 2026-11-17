@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>美术打磨设计 · 撤离战区</title>
+<style>
+  body{margin:0;background:#0a0f0a;color:#dfe8df;font-family:'Microsoft YaHei',sans-serif;padding:30px}
+  h1{color:#ffb060;text-shadow:0 0 12px rgba(255,176,96,.4);letter-spacing:2px}
+  h2{color:#ffd9a8;border-bottom:1px solid #6a4a2a;padding-bottom:8px;margin-top:34px}
+  h3{color:#ffc080;margin:20px 0 8px}
+  .wrap{max-width:1000px;margin:0 auto}
+  .grid{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px}
+  .card{flex:1;min-width:280px;background:rgba(60,40,20,.3);border:1px solid #6a4a2a;border-radius:12px;padding:18px}
+  .card h4{margin:0 0 10px;color:#ffc080;font-size:16px}
+  .card ul{margin:0;padding-left:18px;line-height:1.8;font-size:13.5px}
+  .card li{margin-bottom:5px}
+  .rank{display:flex;gap:12px;margin:8px 0;align-items:center;background:rgba(50,35,15,.5);padding:10px 14px;border-radius:8px;border:1px solid #5a3a20;font-size:14px}
+  .rank .n{color:#ffd54f;font-weight:700;min-width:26px}
+  .rank .g{flex:1}
+  .rank .v{color:#8adfff;font-size:12.5px;min-width:120px;text-align:right}
+  .tag{display:inline-block;background:#3a2a1a;border:1px solid #ffb060;color:#ffd9a8;border-radius:14px;padding:2px 12px;font-size:12px;margin:2px}
+  .note{background:rgba(255,176,96,.08);border-left:3px solid #ffb060;padding:12px 16px;border-radius:6px;font-size:13px;color:#ffe0c0;margin-top:20px}
+  .warn{background:rgba(255,79,79,.08);border-left:3px solid #ff5a5a;padding:12px 16px;border-radius:6px;font-size:13px;color:#ffc0c0;margin-top:20px}
+  .flow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:16px 0}
+  .step{background:#3a2a12;border:1px solid #6a4a2a;padding:8px 14px;border-radius:8px;font-size:13px;color:#ffd9a8}
+  .arrow{color:#ffb060}
+  code{background:#201608;padding:2px 6px;border-radius:4px;color:#ffd9a8;font-size:13px}
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+  th,td{border:1px solid #5a3a20;padding:7px 10px;text-align:left}
+  th{background:#2a1c0c;color:#ffc080}
+  td code{font-size:12px}
+  .ok{color:#7dff9a}
+  .art{display:flex;gap:10px;margin:8px 0;align-items:center;background:rgba(50,35,15,.4);padding:10px 14px;border-radius:8px;font-size:14px}
+  .art .role{color:#ffc080;font-weight:700;min-width:150px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🎨 美术组打磨设计 · 撤离战区（白天军事区）</h1>
+<p style="color:#a89a8a">三位美术师分工完成设计：<b style="color:#ffc080">环境光照师</b> · <b style="color:#ffc080">材质道具师</b> · <b style="color:#ffc080">色彩分级师</b></p>
+
+<div class="art"><span class="role">🎬 环境光照师</span>烈日方向感 + 暖尘土空气透视 + 长投影 + 冷调阴影对比</div>
+<div class="art"><span class="role">🧱 材质道具师</span>程序化贴图（瓦楞集装箱/混凝土裂缝/卡其沙袋/烧焦战车）+ 军规警示标识</div>
+<div class="art"><span class="role">🎞️ 色彩分级师</span>青橙电影调 + 暗角柔化 + 颗粒 + 构图引导到撤离点</div>
+
+<h2>📊 现状问题诊断</h2>
+<table>
+<tr><th>维度</th><th>现状</th><th>问题</th></tr>
+<tr><td>光照</td><td>环境光 0.75 + 半球光 0.8 + 弱太阳 1.6（近天顶）</td><td>平光把阴影填平 → <b>灰蒙蒙、无方向感、无长投影</b></td></tr>
+<tr><td>雾/背景</td><td>冷灰蓝线性雾 + 纯色蓝背景</td><td>远景被蓝灰吞没，<b>无暖尘土空气透视</b></td></tr>
+<tr><td>地面</td><td>室内黑金属地板 + 绿网格（ground.svg）</td><td><b>主题错配</b>：室内绿网格出现在白天室外军事区</td></tr>
+<tr><td>材质</td><td>集装箱/掩体/沙袋纯色盒，metalness 0.5 无环境贴图</td><td><b>塑料感/死黑</b>，无锈迹/瓦楞/编号，语义不可读</td></tr>
+<tr><td>色彩</td><td>偏灰无色彩倾向，暗角生硬，颗粒偏脏</td><td>平淡无电影感，HUD 四角被压死</td></tr>
+<tr><td>粒子</td><td>绿色数字雨 + 绿色微尘下落</td><td>矩阵绿雨在白天室外<b>视觉突兀</b></td></tr>
+</table>
+
+<h2>🎨 美术打磨方案（视觉层，不改玩法/碰撞/命中）</h2>
+
+<h3>① 环境光照 · 烈日军事战区</h3>
+<table>
+<tr><th>项</th><th>现值</th><th>建议</th><th>效果</th></tr>
+<tr><td>太阳</td><td>0xfff0d8 @1.6，近天顶</td><td><code>0xffe2b8 @2.4</code>，位置(22,20,-18)斜射</td><td>暖白烈日，<b>长投影 + 方向感</b></td></tr>
+<tr><td>环境光</td><td>0xb8c8d8 @0.75</td><td><code>0xb0c0d0 @0.35</code></td><td>压平光，阴影变深、对比提升</td></tr>
+<tr><td>半球光</td><td>天/地 0xc8d8e8/0x6a7a6a @0.8</td><td><code>0xbcd0e8/0x8a7a5a @0.55</code></td><td>阴影<b>暖棕填充</b>（地面反照率），保留暗部</td></tr>
+<tr><td>阴影</td><td>PCF 256×256</td><td><code>PCFSoftShadowMap 1024×1024</code></td><td>柔化边缘、去锯齿</td></tr>
+<tr><td>雾</td><td>Fog 0x9fb8d0 25-70</td><td><code>FogExp2(0xd8c3a8,0.015)</code></td><td>暖尘土，远景<b>渐隐入尘土</b>空气透视</td></tr>
+<tr><td>天空</td><td>纯色 0x8fb0d0</td><td>程序化渐变穹顶（顶蓝→地平线暖尘）</td><td>天空有层次，与暖雾衔接</td></tr>
+<tr><td>曝光</td><td>0.86</td><td><code>0.95</code></td><td>提亮保通透，配合压平光提升对比</td></tr>
+<tr><td>网格</td><td>蓝灰 GridHelper 可见</td><td><code>grid.visible=false</code></td><td>移除编辑器网格，军事废墟质感</td></tr>
+<tr><td>绿雨/绿尘</td><td>可见下落</td><td>绿雨隐藏；尘埃改<b>暖尘土上浮</b></td><td>白天主题统一，地面热浪感</td></tr>
+</table>
+
+<h3>② 材质与道具 · 程序化贴图（零付费资源）</h3>
+<table>
+<tr><th>道具</th><th>打磨方案</th><th>视觉编码</th></tr>
+<tr><td>集装箱</td><td>瓦楞竖纹 + 底部锈带 + 黄黑警示斜纹 + 白字编号 E-12/E-02</td><td>饱和色（军绿/锈橙）= <b>高掩体</b></td></tr>
+<tr><td>混凝土</td><td>灰色骨料斑驳 + 污渍流痕 + 发丝裂缝 + 边缘崩缺</td><td>灰 + 顶部小黄标 = 低掩体</td></tr>
+<tr><td>沙袋</td><td><b>卡其/沙色提亮</b> + 麻布织纹 + 堆叠缝线 + 沾灰</td><td>亮卡其 = 低掩体（与深地面分离）</td></tr>
+<tr><td>战车</td><td>装甲板拼缝 + 烧焦黑斑 + 划痕 + 履带盒 + 炮塔剪影</td><td>深色烧焦 = 重型高掩体</td></tr>
+<tr><td>地面</td><td><b>褐土营地</b> + 砾石 + 干草簇 + 车辙带（替代黑金属地板）</td><td>主题统一，道路引导</td></tr>
+<tr><td>道路</td><td>沥青颗粒 + 中央磨损带</td><td>亮纵向引导线 → 撤离点</td></tr>
+<tr><td>铁丝网</td><td>立柱间<b>加网体细线</b>（纯视觉）</td><td>围栏语义</td></tr>
+<tr><td>碎砖</td><td>砖红色 + 裂纹贴图</td><td>装饰（无警示标）</td></tr>
+</table>
+<p class="note">统一规则：<b>掩体 = 饱和色 + 黄/白警示标识；装饰 = 灰暗无标</b>。玩家凭"有没有警示黄标 + 颜色饱和度"即可判断可作掩体，零混淆。全部纹理用 Canvas 程序化生成，<b>零付费资源、零新增文件</b>。</p>
+
+<h3>③ 色彩分级 · 青橙电影调 + 构图引导</h3>
+<table>
+<tr><th>项</th><th>建议</th><th>效果</th></tr>
+<tr><td>色调倾向</td><td>暗部偏青(0x1a2a3a) / 高光偏橙(0xffe0b0)</td><td><b>暖阳冷影</b>青橙分离</td></tr>
+<tr><td>暗角</td><td>透明48% → 黑0.38@82% → 0.78@100%</td><td>更柔，不压死 HUD 角</td></tr>
+<tr><td>颗粒</td><td>opacity 0.14 → 0.12，速度 1.3s</td><td>胶片感不"脏"</td></tr>
+<tr><td>青橙叠加</td><td>新增 #grade（soft-light 0.22：暖高光/冷阴影）</td><td>零依赖近似青橙分调</td></tr>
+<tr><td>信号弹</td><td>红球发光 3.0→3.6，点光 range 40→55</td><td>远端<b>暖红信标</b>引导到撤离点</td></tr>
+<tr><td>敌人</td><td>emissiveIntensity 0.35→0.45 + 暖轮廓光</td><td>敌人从冷背景<b>浮出</b>，可读性提升</td></tr>
+<tr><td>三景深</td><td>前景武器/低掩体 · 中景集装箱色块 · 背景冷雾退晕</td><td>视线在敌人↔撤离点间自然拉扯</td></tr>
+</table>
+
+<h2>🔒 约束确认</h2>
+<div class="warn">✅ 全部改动均为<b>视觉层</b>：光照/雾/背景/曝光/材质贴图/装饰网格/粒子颜色/CSS 叠加。<br>
+✅ <b>零改动</b> props 数组、collide、rayWallDist、命中判定、武器/敌人逻辑（玩法与手感完全不受影响）。<br>
+✅ 零付费资源、零第三方依赖，全部 Canvas 程序化贴图 + 已有 GLB/SVG。</div>
+
+<h2>📋 实施清单（确认过审后执行）</h2>
+<div class="flow">
+<span class="step">1. 新增程序化贴图函数（makeTex/texContainer/texConcrete/texSandbag/texTankHull/texGround/texRoad/texDebris/texRust）</span><span class="arrow">→</span>
+<span class="step">2. 灯光/雾/天空/曝光/网格/粒子打磨</span><span class="arrow">→</span>
+<span class="step">3. 各道具材质贴图 + 装饰网格（履带/炮塔/铁丝网网体）</span><span class="arrow">→</span>
+<span class="step">4. CSS 暗角/颗粒/青橙叠加层 + 敌人可读性</span><span class="arrow">→</span>
+<span class="step">5. node --check + 截图亮度验证 + 命中率回归</span>
+</div>
+
+<p class="note">美术组设计已完成，<b>待用户过审</b>。确认后我将按上述清单打磨实施，并用截图 + YAVG 亮度 + 命中率回归验证效果。</p>
+
+</div>
+</body>
+</html>

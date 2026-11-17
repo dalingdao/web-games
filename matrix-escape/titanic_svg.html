@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>泰坦尼克 SVG 动画 - 船头飞翔 20s</title>
+  <style>
+    body {
+      margin: 0;
+      background: #02040a;
+      overflow: hidden;
+      font-family: 'Microsoft YaHei', sans-serif;
+    }
+    #stage {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+    #cap {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #e8f0ff;
+      font-size: 18px;
+      background: rgba(8, 16, 32, 0.6);
+      padding: 12px 24px;
+      border-radius: 24px;
+      z-index: 10;
+      pointer-events: none;
+      letter-spacing: 2px;
+      font-weight: bold;
+    }
+    #info {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #9fc0ee;
+      font-size: 14px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .welcome-btn {
+      position: fixed;
+      top: 80px;
+      right: 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 30px;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    .welcome-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+  </style>
+</head>
+<body>
+  <div id="cap">《泰坦尼克》 · 船头飞翔 · Jack & Rose</div>
+  
+  <a href="http://192.168.1.8:8022/titanic_welcome_video.html" class="welcome-btn">🎬 欢迎视频</a>
+  
+  <div id="info">20 秒 SVG 电影片段</div>
+
+  <svg id="stage" viewBox="0 0 720 1280" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <!-- 天空渐变 -->
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#02040a"/>
+        <stop offset=".3" stop-color="#0a1a35"/>
+        <stop offset=".7" stop-color="#16304a"/>
+        <stop offset="1" stop-color="#0e2a44"/>
+      </linearGradient>
+      
+      <!-- 海面渐变 -->
+      <linearGradient id="seaG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#0e2a44"/>
+        <stop offset="1" stop-color="#051020"/>
+      </linearGradient>
+      
+      <!-- 月亮发光 -->
+      <radialGradient id="moonG">
+        <stop offset="0" stop-color="#d8e6ff" stop-opacity=".95"/>
+        <stop offset="0.3" stop-color="#e2ecff" stop-opacity=".7"/>
+        <stop offset="1" stop-color="#d8e6ff" stop-opacity="0"/>
+      </radialGradient>
+      
+      <!-- 暗角效果 -->
+      <radialGradient id="vig" cx=".5" cy=".5" r=".72">
+        <stop offset=".55" stop-color="#000" stop-opacity="0"/>
+        <stop offset="1" stop-color="#000" stop-opacity=".6"/>
+      </radialGradient>
+      
+      <!-- 船体颜色 -->
+      <linearGradient id="hullG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#141a26"/>
+        <stop offset="1" stop-color="#070a12"/>
+      </linearGradient>
+      
+      <!-- 颗粒噪点 -->
+      <filter id="grain">
+        <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" result="n"/>
+        <feColorMatrix in="n" type="saturate" values="0"/>
+        <feComponentTransfer>
+          <feFuncA type="linear" slope=".08"/>
+        </feComponentTransfer>
+        <feComposite operator="over" in2="SourceGraphic"/>
+      </filter>
+      
+      <!-- 月光反光 -->
+      <linearGradient id="moonReflectG" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+        <stop offset="0.5" stop-color="#ffffff" stop-opacity=".3"/>
+        <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+
+    <!-- 天空背景 -->
+    <rect width="720" height="1280" fill="url(#sky)"/>
+    
+    <!-- 星星容器 -->
+    <g id="stars"></g>
+    
+    <!-- 月亮 + 光晕 -->
+    <circle cx="180" cy="200" r="120" fill="url(#moonG)" opacity=".7"/>
+    <circle cx="180" cy="200" r="34" fill="#e2ecff" opacity=".9"/>
+    
+    <!-- 场景组(镜头推拉) -->
+    <g id="scene">
+      <!-- 多层海浪 -->
+      <path id="sea1" fill="url(#seaG)" 
+            d="M0 860 C120 840 240 876 360 856 C480 836 600 872 720 852 L720 1280 L0 1280 Z"/>
+      <path id="sea2" fill="none" stroke="#2a5a80" stroke-width="3" opacity=".4" 
+            d="M0 900 C140 880 280 916 420 894 C560 872 660 910 720 892"/>
+      <path id="sea3" fill="none" stroke="#3a6a90" stroke-width="2" opacity=".3" 
+            d="M0 950 C160 930 320 966 480 944 C620 926 690 960 720 948"/>
+      
+      <!-- 月光海面反光 -->
+      <path id="moonReflect" fill="url(#moonReflectG)" opacity=".12" 
+            d="M100 860 C130 900 170 940 150 1000 C170 960 200 920 180 860 Z"/>
+      
+      <!-- 船头(尖) -->
+      <g id="bow">
+        <path d="M-30 840 L60 800 L210 780 L260 800 L210 850 L60 880 Z" fill="url(#hullG)"/>
+        <path d="M60 800 L210 780 L260 800 L210 820 L60 830 Z" fill="#1a2230"/>
+        <path d="M60 800 L210 780" stroke="#2a3a50" stroke-width="3"/>
+        <!-- 桅杆 -->
+        <rect x="70" y="700" width="4" height="100" fill="#1a2230"/>
+        <circle cx="72" cy="700" r="6" fill="#ffb03c" opacity=".9"/>
+      </g>
+      
+      <!-- Jack (左, 张臂) -->
+      <g id="jack">
+        <circle cx="112" cy="700" r="16" fill="#0a0d14"/>
+        <path d="M100 716 L124 716 L120 780 L104 780 Z" fill="#0a0d14"/>
+        <rect x="103" y="780" width="9" height="42" fill="#0a0d14"/>
+        <rect x="113" y="780" width="9" height="42" fill="#0a0d14"/>
+        <path id="jackArmL" d="M100 722 L52 688 L60 682 L104 714 Z" fill="#0a0d14"/>
+        <path id="jackArmR" d="M124 722 L172 688 L164 682 L120 714 Z" fill="#0a0d14"/>
+      </g>
+      
+      <!-- Rose (右, 张臂) -->
+      <g id="rose">
+        <circle cx="176" cy="700" r="15" fill="#0a0d14"/>
+        <path id="roseHair" d="M161 700 C158 685 164 678 176 678 C188 678 194 685 191 700 C190 690 184 686 176 686 C168 686 162 690 161 700 Z" fill="#0a0d14"/>
+        <path d="M165 715 L187 715 L183 778 L169 778 Z" fill="#0a0d14"/>
+        <rect x="168" y="778" width="8" height="40" fill="#0a0d14"/>
+        <rect x="177" y="778" width="8" height="40" fill="#0a0d14"/>
+        <path id="roseArmL" d="M165 720 L120 690 L128 684 L168 712 Z" fill="#0a0d14"/>
+        <path id="roseArmR" d="M187 720 L232 690 L224 684 L184 712 Z" fill="#0a0d14"/>
+      </g>
+      
+      <!-- 海风粒子 -->
+      <g id="wind"></g>
+    </g>
+    
+    <!-- 暗角 + 颗粒 -->
+    <rect width="720" height="1280" fill="url(#vig)"/>
+    <rect width="720" height="1280" filter="url(#grain)" opacity=".4"/>
+  </svg>
+
+  <script>
+    const svg = document.getElementById('stage');
+    const NS = 'http://www.w3.org/2000/svg';
+    
+    function el(t, a) {
+      const e = document.createElementNS(NS, t);
+      for (const k in a) e.setAttribute(k, a[k]);
+      return e;
+    }
+    
+    // 创建星星
+    const st = document.getElementById('stars');
+    for (let i = 0; i < 160; i++) {
+      const size = Math.random() * 1.6 + 0.3;
+      const star = el('circle', {
+        cx: Math.random() * 720,
+        cy: Math.random() * 520,
+        r: size,
+        fill: '#cfe0ff',
+        opacity: (0.3 + Math.random() * 0.7).toFixed(2)
+      });
+      st.appendChild(star);
+    }
+    
+    // 创建海风粒子
+    const wind = document.getElementById('wind');
+    for (let i = 0; i < 40; i++) {
+      const particle = el('circle', {
+        cx: Math.random() * 720,
+        cy: 600 + Math.random() * 400,
+        r: Math.random() * 1.5 + 0.5,
+        fill: '#9fc0ee',
+        opacity: Math.random() * 0.5
+      });
+      wind.appendChild(particle);
+    }
+    
+    const scene = document.getElementById('scene');
+    const sea1 = document.getElementById('sea1'), sea2 = document.getElementById('sea2'), sea3 = document.getElementById('sea3');
+    const jackArmL = document.getElementById('jackArmL'), jackArmR = document.getElementById('jackArmR');
+    const roseArmL = document.getElementById('roseArmL'), roseArmR = document.getElementById('roseArmR');
+    const roseHair = document.getElementById('roseHair'), moonReflect = document.getElementById('moonReflect');
+    const info = document.getElementById('info');
+    
+    const DUR = 20;
+    function wave(t) { return Math.sin(t * 1.2) * 1 + Math.sin(t * 0.7) * 0.5; }
+    var now0 = performance.now();
+    
+    (function loop(now) {
+      requestAnimationFrame(loop);
+      const total = Math.min(DUR, (now - now0) / 1000);
+      
+      // 镜头: 0-10s 推近, 10-20s 拉远环绕
+      let scale, tx;
+      if (total < 10) {
+        const p = total / 10;
+        scale = 1.0 + p * 0.35;
+        tx = -20 * p;
+      } else {
+        const p = (total - 10) / 10;
+        scale = 1.35 - p * 0.45;
+        tx = -20 + 40 * p;
+      }
+      scene.setAttribute('transform', `translate(${tx},0) scale(${scale})`);
+      
+      // 海浪动画
+      sea1.setAttribute('d', `M0 ${860 + wave(total) * 6} C120 ${840 + wave(total + 1) * 6} 240 ${876 + wave(total + 2) * 6} 360 ${856 + wave(total) * 8} C480 ${836 + wave(total + 1) * 8} 600 ${872 + wave(total + 2) * 6} 720 ${852 + wave(total) * 8} L720 1280 L0 1280 Z`);
+      sea2.setAttribute('d', `M0 ${900 + wave(total * 1.3) * 5} C140 ${880} 280 ${916 + wave(total + 1) * 5} 420 ${894 + wave(total * 1.3) * 6} C560 ${872} 660 ${910 + wave(total + 1) * 5} 720 ${892}`);
+      sea3.setAttribute('d', `M0 ${950 + wave(total * 1.5) * 4} C160 ${930} 320 ${966 + wave(total + 1) * 4} 480 ${944 + wave(total * 1.5) * 5} C620 ${926} 690 ${960 + wave(total + 1) * 4} 720 ${948 + wave(total) * 3}`);
+      
+      // 张臂微摆(飞翔)
+      const sway = Math.sin(total * 1.5) * 6;
+      jackArmL.setAttribute('d', `M100 722 L${52 - sway} ${688 - sway * 0.3} L${60 - sway} ${682 - sway * 0.3} L104 714 Z`);
+      jackArmR.setAttribute('d', `M124 722 L${172 + sway} ${688 - sway * 0.3} L${164 + sway} ${682 - sway * 0.3} L120 714 Z`);
+      roseArmL.setAttribute('d', `M165 720 L${120 - sway * 0.8} ${690 - sway * 0.3} L${128 - sway * 0.8} ${684 - sway * 0.3} L168 712 Z`);
+      roseArmR.setAttribute('d', `M187 720 L${232 + sway * 0.8} ${690 - sway * 0.3} L${224 + sway * 0.8} ${684 - sway * 0.3} L184 712 Z`);
+      
+      // Rose 头发飘动
+      roseHair.setAttribute('d', `M161 700 C158 ${685 + sway * 0.5} 164 ${678} 176 ${678} C188 ${678} 194 ${685 + sway * 0.3} 191 700 C190 ${690 + sway * 0.3} 184 ${686} 176 ${686} C168 ${686} 162 ${690} 161 700 Z`);
+      
+      // 月光反光波动
+      moonReflect.setAttribute('opacity', (0.10 + Math.abs(Math.sin(total * 0.8)) * 0.06).toFixed(3));
+      
+      // 海风粒子飘
+      wind.querySelectorAll('circle').forEach((c, i) => {
+        const x = parseFloat(c.getAttribute('cx')) + Math.sin(total * 0.5 + i) * 0.8;
+        c.setAttribute('cx', ((x > 760 ? 0 : x)).toFixed(1));
+      });
+      
+      info.textContent = `${total.toFixed(1)}s / 20s`;
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>黑客帝国走廊枪战 — FPS</title>
+<link rel="stylesheet" href="style.css?v=1794400000004"></head><body>
+<canvas id="game"></canvas>
+<!-- 电影级后处理叠加层: 暗角 + 胶片颗粒 -->
+<div id="vignette"></div>
+<div id="filmgrain"></div>
+<canvas id="hudc" style="position:fixed;inset:0;pointer-events:none;z-index:5"></canvas>
+<div id="crosshair">+</div>
+<audio id="bgm" src="bgm.m4a" loop preload="auto"></audio>
+<div class="hit" id="hit">命中!</div>
+<div id="hud">
+  <div class="top"><span id="score">得分 0</span><span id="wave">准备...</span><button id="recBtn" title="点击开始/停止录像">⏺ 录像</button></div>
+  <div id="bossbar" style="display:none;position:absolute;top:52px;left:50%;transform:translateX(-50%);width:min(300px,70%);height:12px;background:rgba(0,0,0,.5);border:1px solid #ff6644;border-radius:6px"><div id="bosshp" style="height:100%;width:100%;background:linear-gradient(90deg,#ff5533,#ffaa44);border-radius:6px;transition:width .2s"></div></div>
+  <div class="hud-bottom">
+    <div class="hp"><small style="font-size:14px;color:#9aa">生命 </small><span id="hp">100</span></div>
+    <div class="weapon"><div class="wn" id="wn">突击步枪</div><div class="ammo" id="ammo">30 <small>/ 120</small></div></div>
+  </div>
+</div>
+<div id="touchUI">
+  <div id="lookZone"></div>
+  <div id="joy"><div id="joyKnob"></div></div>
+  <div id="mobileBtns">
+    <div class="fnrow">
+      <div class="mbtn small" id="btnReload">换弹</div>
+      <div class="mbtn small" id="btnSwap">切枪</div>
+      <div class="mbtn small" id="btnSprint">冲刺</div>
+    </div>
+    <div class="mbtn" id="btnFire">火</div>
+  </div>
+</div>
+<script src="vendor/three.min.js?v=1794400000000"></script>
+<script src="vendor/GLTFLoader.js?v=1794400000000"></script>
+<script src="battle_cine.js?v=1794400000000"></script>
+<script src="game.js?v=1794400000017"></script>
+</body></html>

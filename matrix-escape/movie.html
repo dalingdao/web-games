@@ -1,0 +1,126 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;background:#000}</style></head><body>
+<canvas id="c" width="720" height="1280"></canvas>
+<script>
+var c=document.getElementById('c'),x=c.getContext('2d'),W=720,H=1280;
+var s=parseInt(new URLSearchParams(location.search).get('scene')||'1');
+function skyCols(a,b,d){var g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,a);g.addColorStop(d,b);return g;}
+// ============ 场景1: 夜航餐厅(暖金) ============
+if(s===1){
+  var bg=skyCols('#1c1206','#0e0a05',.55);x.fillStyle=bg;x.fillRect(0,0,W,H);
+  var glow=x.createRadialGradient(360,200,40,360,200,560);glow.addColorStop(0,'rgba(255,214,140,.95)');glow.addColorStop(.4,'rgba(255,180,90,.45)');glow.addColorStop(1,'rgba(255,160,70,0)');
+  x.fillStyle=glow;x.fillRect(0,0,W,900);
+  x.strokeStyle='rgba(255,190,110,.5)';x.lineWidth=6;x.beginPath();x.moveTo(60,380);x.lineTo(300,760);x.moveTo(660,380);x.lineTo(420,760);x.stroke();
+  x.strokeStyle='rgba(255,200,120,.28)';x.lineWidth=3;for(var i=0;i<6;i++){var t=i/6;x.beginPath();x.moveTo(90+t*40,360+t*120);x.lineTo(630-t*40,360+t*120);x.stroke();}
+  function lamp(cx,cy,sc){x.strokeStyle='rgba(255,220,150,.7)';x.lineWidth=3*sc;x.beginPath();x.moveTo(cx,cy-90*sc);x.lineTo(cx,cy);x.stroke();
+    var lg=x.createRadialGradient(cx,cy,2,cx,cy,60*sc);lg.addColorStop(0,'rgba(255,240,200,1)');lg.addColorStop(.3,'rgba(255,200,110,.8)');lg.addColorStop(1,'rgba(255,180,80,0)');
+    x.fillStyle=lg;x.beginPath();x.arc(cx,cy,60*sc,0,7);x.fill();x.fillStyle='rgba(255,255,220,.95)';
+    for(var k=0;k<8;k++){var a=k/8*6.28;x.beginPath();x.arc(cx+Math.cos(a)*22*sc,cy+Math.sin(a)*22*sc,3.5*sc,0,7);x.fill();}}
+  lamp(360,300,1.5);lamp(150,330,1.1);lamp(570,330,1.1);
+  x.fillStyle='#2a1c0c';x.beginPath();x.moveTo(60,760);x.lineTo(660,760);x.lineTo(520,H);x.lineTo(200,H);x.closePath();x.fill();
+  x.fillStyle='rgba(20,12,5,.98)';x.fillRect(120,900,480,28);
+  x.fillStyle='rgba(255,210,130,.5)';x.fillRect(300,900,5,42);x.fillRect(420,900,5,42);
+  function person(px,py,sc){x.fillStyle='rgba(8,5,3,.95)';x.beginPath();x.arc(px,py-70*sc,20*sc,0,7);x.fill();x.fillRect(px-24*sc,py-52*sc,48*sc,90*sc);x.fillStyle='rgba(255,200,120,.35)';x.fillRect(px-24*sc,py-52*sc,48*sc,6*sc);}
+  person(300,860,1);person(430,880,1.05);
+  x.fillStyle='rgba(255,214,140,.9)';x.font='bold 54px Georgia,serif';x.textAlign='center';x.fillText('夜 航',360,180);
+  x.font='24px Georgia,serif';x.fillStyle='rgba(255,214,140,.6)';x.fillText('THE NIGHT VOYAGE · 1912',360,222);
+}
+// ============ 场景2: 瞭望冰山(冷蓝) ============
+else if(s===2){
+  x.fillStyle=skyCols('#05070d','#0d1a2c',.5);x.fillRect(0,0,W,760);
+  for(var i=0;i<110;i++){x.fillStyle='rgba(200,220,255,'+(0.15+Math.random()*0.6)+')';x.fillRect(Math.random()*W,Math.random()*500,2,2);}
+  var moon=x.createRadialGradient(560,150,20,560,150,320);moon.addColorStop(0,'rgba(200,225,255,.9)');moon.addColorStop(.25,'rgba(150,190,240,.4)');moon.addColorStop(1,'rgba(150,190,240,0)');
+  x.fillStyle=moon;x.fillRect(0,0,W,600);
+  x.fillStyle='#0a1828';x.fillRect(0,760,W,H-760);
+  x.fillStyle='rgba(160,200,250,.15)';for(var r=0;r<50;r++){x.fillRect(100+Math.random()*500,770+Math.random()*480,3+Math.random()*12,2);}
+  // 远处冰山
+  x.fillStyle='rgba(180,210,235,.85)';x.beginPath();x.moveTo(300,660);x.lineTo(400,520);x.lineTo(440,600);x.lineTo(490,540);x.lineTo(560,660);x.closePath();x.fill();
+  // 瞭望台(前景剪影, 下方)
+  x.fillStyle='#050a10';x.fillRect(0,1000,W,280);
+  x.fillStyle='#070d15';x.fillRect(280,900,160,120);
+  x.beginPath();x.moveTo(300,900);x.lineTo(360,820);x.lineTo(420,900);x.closePath();x.fill();
+  // 瞭望员剪影
+  x.fillStyle='#02050a';x.beginPath();x.arc(360,880,24,0,7);x.fill();x.fillRect(336,904,48,90);
+  x.strokeStyle='#0a1520';x.lineWidth=6;x.beginPath();x.moveTo(380,890);x.lineTo(470,850);x.stroke(); // 望远镜
+  x.fillStyle='rgba(255,255,255,.8)';x.font='bold 52px Georgia,serif';x.textAlign='center';x.fillText('瞭 望',360,170);
+  x.font='22px Georgia,serif';x.fillStyle='rgba(190,215,250,.6)';x.fillText('THE LOOKOUT · 1912',360,210);
+}
+// ============ 场景3: 撞击(复用) ============
+else if(s===3){
+  var sky=x.createLinearGradient(0,0,0,700);sky.addColorStop(0,'#05070d');sky.addColorStop(.6,'#0a1524');sky.addColorStop(1,'#13263a');x.fillStyle=sky;x.fillRect(0,0,W,700);
+  for(var i=0;i<90;i++){x.fillStyle='rgba(200,220,255,'+(0.2+Math.random()*0.6)+')';x.fillRect(Math.random()*W,Math.random()*420,2,2);}
+  var moon=x.createRadialGradient(180,150,20,180,150,400);moon.addColorStop(0,'rgba(200,225,255,.85)');moon.addColorStop(.25,'rgba(150,190,240,.4)');moon.addColorStop(1,'rgba(150,190,240,0)');x.fillStyle=moon;x.fillRect(0,0,W,600);
+  var sea=x.createLinearGradient(0,700,0,H);sea.addColorStop(0,'#0c1a2b');sea.addColorStop(.4,'#0a1523');sea.addColorStop(1,'#04070d');x.fillStyle=sea;x.fillRect(0,700,W,H-700);
+  x.fillStyle='rgba(160,200,250,.18)';for(var r=0;r<40;r++){x.fillRect(140+Math.random()*120,710+Math.random()*500,3+Math.random()*14,2);}
+  function iceberg(bx,by,sc){x.fillStyle='rgba(200,225,245,.95)';x.beginPath();x.moveTo(bx-260*sc,by+120*sc);x.lineTo(bx-120*sc,by-180*sc);x.lineTo(bx-60*sc,by-60*sc);x.lineTo(bx,by-260*sc);x.lineTo(bx+70*sc,by-90*sc);x.lineTo(bx+180*sc,by+30*sc);x.lineTo(bx+260*sc,by+140*sc);x.closePath();x.fill();
+    x.fillStyle='rgba(120,160,200,.5)';x.beginPath();x.moveTo(bx-60*sc,by-60*sc);x.lineTo(bx,by-260*sc);x.lineTo(bx+70*sc,by-90*sc);x.lineTo(bx,by);x.closePath();x.fill();
+    x.strokeStyle='rgba(255,255,255,.85)';x.lineWidth=3;x.beginPath();x.moveTo(bx,by-260*sc);x.lineTo(bx-120*sc,by-180*sc);x.stroke();}
+  iceberg(560,840,1.05);
+  x.save();x.translate(120,760);x.rotate(-0.16);x.fillStyle='#0b0d12';x.beginPath();x.moveTo(-60,-180);x.lineTo(430,-120);x.lineTo(400,40);x.lineTo(-90,40);x.closePath();x.fill();
+  x.beginPath();x.moveTo(-90,40);x.lineTo(-160,-60);x.lineTo(-60,-180);x.closePath();x.fill();
+  for(var w=0;w<16;w++){x.fillStyle='rgba(255,190,90,.9)';x.fillRect(-50+w*28,-60,7,9);x.fillStyle='rgba(255,170,70,.3)';x.fillRect(-50+w*28-2,-62,11,13);}
+  x.fillStyle='#1a0f0d';x.fillRect(120,-260,60,120);x.fillRect(260,-240,60,110);x.fillStyle='rgba(255,80,60,.6)';x.fillRect(120,-260,60,18);x.fillRect(260,-240,60,18);x.restore();
+  var imp=x.createRadialGradient(430,790,5,430,790,220);imp.addColorStop(0,'rgba(230,245,255,.9)');imp.addColorStop(.3,'rgba(160,210,250,.5)');imp.addColorStop(1,'rgba(160,210,250,0)');x.fillStyle=imp;x.beginPath();x.arc(430,790,220,0,7);x.fill();
+  for(var s2=0;s2<60;s2++){var a=Math.random()*3.14,sd=40+Math.random()*180;x.fillStyle='rgba(220,240,255,'+(0.4+Math.random()*0.5)+')';x.fillRect(430+Math.cos(a)*sd,790-Math.sin(a)*sd,3+Math.random()*5,3);}
+  x.fillStyle='rgba(210,230,255,.9)';x.font='bold 56px Georgia,serif';x.textAlign='center';x.fillText('撞 击',360,180);
+  x.font='24px Georgia,serif';x.fillStyle='rgba(190,215,250,.6)';x.fillText('THE COLLISION · 1912',360,222);
+}
+// ============ 场景4: 进水(倾斜+海水涌入) ============
+else if(s===4){
+  x.fillStyle='#070a10';x.fillRect(0,0,W,H);
+  x.save();x.translate(360,720);x.rotate(0.28);
+  // 船体倾斜(大面积, 舱壁)
+  x.fillStyle='#10141c';x.beginPath();x.moveTo(-500,-160);x.lineTo(500,-100);x.lineTo(500,260);x.lineTo(-500,320);x.closePath();x.fill();
+  // 倾斜的灯光窗
+  for(var w=0;w<20;w++){x.fillStyle=w<9?'rgba(255,190,90,.9)':'rgba(120,60,40,.7)';x.fillRect(-460+w*46,-60,16,22);}
+  // 底舱进水的海水(蓝色倾泻)
+  var wg=x.createLinearGradient(0,60,0,320);wg.addColorStop(0,'rgba(60,120,180,.85)');wg.addColorStop(1,'rgba(20,50,90,.95)');
+  x.fillStyle=wg;x.beginPath();x.moveTo(-500,90);x.lineTo(500,140);x.lineTo(500,320);x.lineTo(-500,320);x.closePath();x.fill();
+  // 人物慌乱剪影(倾斜, 抓扶手)
+  x.fillStyle='rgba(4,6,10,.9)';x.beginPath();x.arc(-180,10,22,0,7);x.fill();x.fillRect(-204,32,48,95);
+  x.beginPath();x.arc(120,-20,20,0,7);x.fill();x.fillRect(98,-2,44,88);
+  x.restore();
+  // 溅起水花
+  for(var i=0;i<50;i++){var a=Math.random()*1.5,sd=40+Math.random()*200;x.fillStyle='rgba(120,180,230,'+(0.3+Math.random()*0.5)+')';x.fillRect(360+Math.cos(a)*sd,940-Math.sin(a)*sd,4+Math.random()*6,3);}
+  x.fillStyle='rgba(255,220,170,.9)';x.font='bold 52px Georgia,serif';x.textAlign='center';x.fillText('进 水',360,170);
+  x.font='22px Georgia,serif';x.fillStyle='rgba(220,235,255,.6)';x.fillText('FLOODING · 1912',360,210);
+}
+// ============ 场景5: 救生艇(甲板+妇孺) ============
+else if(s===5){
+  x.fillStyle=skyCols('#0a1420','#0c1826',.5);x.fillRect(0,0,W,820);
+  for(var i=0;i<90;i++){x.fillStyle='rgba(200,220,255,'+(0.15+Math.random()*0.5)+')';x.fillRect(Math.random()*W,Math.random()*450,2,2);}
+  var moon=x.createRadialGradient(200,140,15,200,140,300);moon.addColorStop(0,'rgba(200,225,255,.8)');moon.addColorStop(.3,'rgba(150,190,240,.3)');moon.addColorStop(1,'rgba(150,190,240,0)');x.fillStyle=moon;x.fillRect(0,0,W,500);
+  // 甲板(透视)
+  x.fillStyle='#141a24';x.beginPath();x.moveTo(0,760);x.lineTo(W,760);x.lineTo(W,H);x.lineTo(0,H);x.closePath();x.fill();
+  x.strokeStyle='rgba(120,150,190,.2)';x.lineWidth=2;for(var i2=0;i2<7;i2++){x.beginPath();x.moveTo(0,790+i2*70);x.lineTo(W,790+i2*70);x.stroke();}
+  // 救生艇(吊架+船)
+  x.strokeStyle='#0a0f16';x.lineWidth=14;x.beginPath();x.moveTo(120,660);x.lineTo(200,940);x.moveTo(600,660);x.lineTo(520,940);x.stroke();
+  x.fillStyle='#0d1218';x.beginPath();x.moveTo(140,900);x.quadraticCurveTo(360,830,580,900);x.lineTo(560,980);x.quadraticCurveTo(360,1010,160,980);x.closePath();x.fill();
+  x.strokeStyle='rgba(150,180,220,.4)';x.lineWidth=3;x.beginPath();x.moveTo(140,900);x.quadraticCurveTo(360,830,580,900);x.stroke();
+  // 艇内人物(妇孺剪影)
+  function fig(px,py,sc,h){x.fillStyle='#04070c';x.beginPath();x.arc(px,py-46*sc,17*sc,0,7);x.fill();x.fillRect(px-20*sc,py-30*sc,40*sc,h*sc);}
+  fig(260,920,1,70);fig(330,905,0.9,62);fig(400,915,1,66);
+  // 乐队(左侧, 提琴轮廓)
+  x.fillStyle='rgba(4,6,10,.9)';x.beginPath();x.arc(80,850,20,0,7);x.fill();x.fillRect(56,870,48,95);
+  x.strokeStyle='rgba(255,200,120,.5)';x.lineWidth=4;x.beginPath();x.arc(120,880,18,0,7);x.stroke();
+  x.fillStyle='rgba(200,225,255,.9)';x.font='bold 52px Georgia,serif';x.textAlign='center';x.fillText('救生艇',360,170);
+  x.font='22px Georgia,serif';x.fillStyle='rgba(190,215,250,.6)';x.fillText('THE LIFEBOATS · 1912',360,210);
+}
+// ============ 场景6: 沉没(没入黑暗) ============
+else{
+  x.fillStyle='#03040a';x.fillRect(0,0,W,H);
+  x.fillStyle='#060d18';x.fillRect(0,620,W,H-620);
+  x.fillStyle='rgba(140,180,230,.1)';for(var r=0;r<30;r++){x.fillRect(60+Math.random()*600,640+Math.random()*500,2+Math.random()*8,2);}
+  // 巨轮倾斜没入(船头翘起, 剪影)
+  x.save();x.translate(360,760);x.rotate(-0.5);
+  x.fillStyle='#04060c';x.beginPath();x.moveTo(-420,60);x.lineTo(380,110);x.lineTo(320,220);x.lineTo(-460,190);x.closePath();x.fill();
+  x.beginPath();x.moveTo(-460,190);x.lineTo(-560,120);x.lineTo(-420,60);x.closePath();x.fill();
+  // 最后灯光(渐灭)
+  for(var w=0;w<10;w++){x.fillStyle=w<3?'rgba(255,190,90,.8)':'rgba(80,50,40,.4)';x.fillRect(-400+w*70,100,10,14);}
+  x.fillStyle='#0a0708';x.fillRect(-100,-120,46,120);x.fillRect(40,-110,46,110);x.restore();
+  // 救生艇剪影(前景, 回望)
+  x.fillStyle='#04060a';x.beginPath();x.moveTo(120,1080);x.quadraticCurveTo(360,1030,600,1080);x.lineTo(580,1140);x.quadraticCurveTo(360,1160,140,1140);x.closePath();x.fill();
+  x.fillStyle='rgba(200,220,255,.9)';x.font='bold 52px Georgia,serif';x.textAlign='center';x.fillText('沉 没',360,170);
+  x.font='22px Georgia,serif';x.fillStyle='rgba(160,190,230,.6)';x.fillText('THE SINKING · 1912',360,210);
+  x.font='18px Georgia,serif';x.fillStyle='rgba(200,215,240,.75)';x.fillText('2:20 AM · 1517 LOST',360,250);
+}
+</script></body></html>

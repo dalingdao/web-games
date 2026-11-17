@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>黑客帝国 · 下一关场景 · 撤离战术区 3D 预览</title>
+<style>
+body{margin:0;background:#05080a;overflow:hidden;font-family:'Microsoft YaHei',sans-serif}
+#hud{position:fixed;top:12px;left:50%;transform:translateX(-50%);color:#ffd0a0;font-size:13px;
+  background:rgba(20,10,4,.6);padding:10px 18px;border-radius:8px;pointer-events:none;z-index:5;text-align:center;line-height:1.8;border:1px solid rgba(255,160,80,.3)}
+#hud b{color:#ffb060}
+#hud .s{color:#8fb8e8}
+canvas{display:block;touch-action:none}
+</style></head>
+<body>
+<div id="hud"><b>下一关 · 撤离战术区 3D 场景预览</b><br>
+🖱 左键拖拽 = 旋转　🖱 滚轮 = 缩放　🖱 右键拖拽 = 平移<br>
+📱 单指 = 旋转　双指捏合 = 缩放　双指拖 = 平移<br>
+<span class="s">集装箱营地 · 掩体 · 撤离点直升机 · 红色信号弹</span></div>
+<script src="vendor/three.min.js"></script>
+<script>
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x0a1418,0.010);
+const cam=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,0.1,2000);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+document.body.appendChild(renderer.domElement);
+
+// 灯光: 月光(冷蓝) + 战区信号弹(暖橙) + 环境
+scene.add(new THREE.AmbientLight(0x2a3540,0.7));
+const moon=new THREE.DirectionalLight(0x9fb8e8,2.2);moon.position.set(-60,90,-40);scene.add(moon);
+const warm=new THREE.PointLight(0xff8840,2.8,160);warm.position.set(18,8,22);scene.add(warm); // 信号弹暖光
+const fill=new THREE.PointLight(0x4a6a90,1.0,120);fill.position.set(-30,20,40);scene.add(fill);
+
+// 星空
+(function(){
+  const n=900,pos=new Float32Array(n*3);
+  for(let i=0;i<n;i++){const th=Math.random()*Math.PI*2,ph=Math.random()*Math.PI*0.5+0.1,r=280+Math.random()*140;
+    pos[i*3]=r*Math.sin(ph)*Math.cos(th);pos[i*3+1]=r*Math.cos(ph);pos[i*3+2]=r*Math.sin(ph)*Math.sin(th);}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xb0c8ff,size:0.9,sizeAttenuation:true,transparent:true,opacity:0.8})));
+})();
+
+// ===== 材质 =====
+const concM=new THREE.MeshStandardMaterial({color:0x4a4a48,roughness:0.9,metalness:0.1});
+const concDark=new THREE.MeshStandardMaterial({color:0x30302e,roughness:0.95,metalness:0.08});
+const contM=new THREE.MeshStandardMaterial({color:0x8a5a2a,roughness:0.7,metalness:0.5}); // 集装箱锈橙
+const contM2=new THREE.MeshStandardMaterial({color:0x3a5a4a,roughness:0.7,metalness:0.5}); // 集装箱军绿
+const groundM=new THREE.MeshStandardMaterial({color:0x2a2a26,roughness:0.95,metalness:0.05});
+const metalM=new THREE.MeshStandardMaterial({color:0x5a5a58,roughness:0.4,metalness:0.8});
+
+// ===== 地面(废墟泥土) =====
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(120,120),groundM);
+ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+
+// 辅助函数
+function box(x,y,z,w,h,d,mat,ry){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+  m.position.set(x,y,z);if(ry)m.rotation.y=ry;m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;}
+
+// ===== 集装箱营地 =====
+// 中央集装箱群(掩体通道)
+box(-12,2.4,4,6,4.8,3,contM,0.15);
+box(-4,2.4,-2,6,4.8,3,contM2,-0.1);
+box(5,2.4,6,6,4.8,3,contM,0.3);
+box(12,2.4,-3,6,4.8,3,contM2,0.2);
+box(-6,2.4,14,6,4.8,3,contM2,0.4);
+box(9,2.4,16,6,4.8,3,contM,-0.25);
+// 堆叠二层集装箱(视觉层次)
+box(-12,7.0,4.6,6,4.4,3,contM2,0.15);
+box(5,7.0,6.5,6,4.4,3,contM2,0.3);
+
+// ===== 混凝土掩体(玩家推进路线) =====
+[[-8,0,0.2],[8,10,0.5],[-8,12,-0.3],[8,22,0.4],[0,18,0.1],[-6,26,0.6],[6,30,-0.2]].forEach(function(c,i){
+  box(c[0],0.7,c[1],2.4,1.4,1.0,i%2?concM:concDark,c[2]);
+});
+// 沙袋堆
+[[-2,4],[4,14],[-3,22]].forEach(function(c){
+  box(c[0],0.5,c[1],1.8,0.9,0.9,concDark,c[0]*0.1);
+});
+
+// ===== 废弃车辆(战车残骸) =====
+function wreck(x,z,ry){
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.BoxGeometry(2.2,1.0,4.4),concDark);body.position.y=0.8;body.castShadow=true;g.add(body);
+  const cab=new THREE.Mesh(new THREE.BoxGeometry(1.8,0.9,1.6),concM);cab.position.set(0,1.5,-0.6);cab.castShadow=true;g.add(cab);
+  const wheel=new THREE.CylinderGeometry(0.4,0.4,0.3,12);wheel.rotateZ(Math.PI/2);
+  [[-1.05,1.4],[1.05,1.4],[-1.05,-1.4],[1.05,-1.4]].forEach(function(w){
+    const wm=new THREE.Mesh(wheel,metalM);wm.position.set(w[0],0.4,w[1]);g.add(wm);});
+  g.position.set(x,0,z);if(ry)g.rotation.y=ry;scene.add(g);
+}
+wreck(-14,10,0.5);wreck(12,26,-0.4);wreck(0,-6,1.2);
+
+// ===== 撤离点: 直升机 + 地面光圈 + 信号弹 =====
+const evac=new THREE.Group();
+// 直升机
+(function(){
+  const h=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.3,3.2,10),metalM);
+  body.rotation.z=Math.PI/2;body.position.y=1.6;body.castShadow=true;h.add(body);
+  const tail=new THREE.Mesh(new THREE.BoxGeometry(2.6,0.4,0.3),metalM);tail.position.set(-2.6,1.7,0);h.add(tail);
+  const tailFin=new THREE.Mesh(new THREE.BoxGeometry(0.3,1.0,0.08),metalM);tailFin.position.set(-3.8,2.1,0);h.add(tailFin);
+  const rotor=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,4.6,8),concDark);rotor.rotation.z=Math.PI/2;rotor.position.y=2.6;h.add(rotor);
+  const rot2=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,4.6,8),concDark);rot2.rotation.x=Math.PI/2;rot2.position.y=2.6;h.add(rot2);
+  const hub=new THREE.Mesh(new THREE.SphereGeometry(0.25,8,6),concDark);hub.position.y=2.6;h.add(hub);
+  const win=new THREE.Mesh(new THREE.BoxGeometry(1.6,0.6,1.0),new THREE.MeshStandardMaterial({color:0x88aacc,emissive:0x223344,roughness:0.2,metalness:0.6}));
+  win.position.set(0.6,1.7,0);h.add(win);
+  const skidL=new THREE.Mesh(new THREE.BoxGeometry(3.4,0.1,0.15),concDark);skidL.position.set(0,0.4,0.7);h.add(skidL);
+  const skidR=skidL.clone();skidR.position.z=-0.7;h.add(skidR);
+  evac.add(h);
+})();
+// 撤离光圈(地面, 绿色脉冲)
+const evacRing=new THREE.Mesh(new THREE.RingGeometry(2.2,2.6,32),
+  new THREE.MeshBasicMaterial({color:0x44ff88,transparent:true,opacity:0.5,side:THREE.DoubleSide}));
+evacRing.rotation.x=-Math.PI/2;evacRing.position.y=0.05;evac.add(evacRing);
+// 信号弹(红色发光柱+光点)
+(function(){
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,3.0,8),concDark);pole.position.set(0.5,1.5,0.5);evac.add(pole);
+  const flare=new THREE.Mesh(new THREE.SphereGeometry(0.18,10,8),
+    new THREE.MeshStandardMaterial({color:0xff3020,emissive:0xff3020,emissiveIntensity:3.0}));
+  flare.position.set(0.5,3.2,0.5);evac.add(flare);
+  const fl=new THREE.PointLight(0xff4020,3.0,60);fl.position.set(0.5,3.2,0.5);evac.add(fl);
+})();
+evac.position.set(0,0,40);scene.add(evac);
+
+// 铁丝网围栏(战区边界)
+(function(){
+  const wireM=new THREE.MeshStandardMaterial({color:0x3a3a38,metalness:0.6,roughness:0.5});
+  [[-30,0],[30,0],[0,-20],[0,50]].forEach(function(w){
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,3,6),wireM);
+    post.position.set(w[0],1.5,w[1]);scene.add(post);
+    const post2=post.clone();post2.position.x=w[0]+4;scene.add(post2);
+  });
+})();
+
+// ===== 手动轨道控制(旋转/缩放/平移) =====
+const target=new THREE.Vector3(0,3,15);
+const sph={r:70,th:0.8,ph:1.15};
+let dragging=false,rightDrag=false,px=0,py=0;
+function applyCam(){
+  cam.position.set(target.x+sph.r*Math.sin(sph.ph)*Math.sin(sph.th),
+    target.y+sph.r*Math.cos(sph.ph),
+    target.z+sph.r*Math.sin(sph.ph)*Math.cos(sph.th));
+  cam.lookAt(target);
+}
+addEventListener('mousedown',e=>{if(e.button===0)dragging=true;if(e.button===2)rightDrag=true;px=e.clientX;py=e.clientY;});
+addEventListener('mouseup',()=>{dragging=false;rightDrag=false;});
+addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('mousemove',e=>{
+  const dx=e.clientX-px,dy=e.clientY-py;px=e.clientX;py=e.clientY;
+  if(dragging){sph.th-=dx*0.005;sph.ph=Math.max(0.05,Math.min(Math.PI-0.05,sph.ph-dy*0.005));}
+  if(rightDrag){const f=sph.r*0.0015;
+    const fx=new THREE.Vector3().subVectors(cam.position,target).normalize().cross(cam.up).normalize();
+    const fy=new THREE.Vector3().crossVectors(fx,cam.up).normalize();
+    target.addScaledVector(fx,-dx*f).addScaledVector(fy,dy*f);}
+  applyCam();
+});
+addEventListener('wheel',e=>{sph.r=Math.max(15,Math.min(400,sph.r*(e.deltaY>0?1.1:0.9)));applyCam();});
+let pinchDist=0;
+addEventListener('touchstart',e=>{
+  if(e.touches.length===1){px=e.touches[0].clientX;py=e.touches[0].clientY;}
+  else if(e.touches.length===2){pinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}
+},{passive:false});
+addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length===1){const dx=e.touches[0].clientX-px,dy=e.touches[0].clientY-py;
+    px=e.touches[0].clientX;py=e.touches[0].clientY;
+    sph.th-=dx*0.006;sph.ph=Math.max(0.05,Math.min(Math.PI-0.05,sph.ph-dy*0.006));}
+  else if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    if(pinchDist>0){sph.r=Math.max(15,Math.min(400,sph.r*(pinchDist/d)));}pinchDist=d;}
+},{passive:false});
+
+// 动画: 撤离光圈旋转 + 信号弹闪烁 + 旋翼转动
+const rotorParts=[];
+evac.traverse(function(o){if(o.isMesh&&o.geometry&&o.geometry.type==='CylinderGeometry'&&o.scale.y===1&&o.rotation.z===0&&o.position.y===2.6)rotorParts.push(o);});
+(function anim(){
+  requestAnimationFrame(anim);
+  evacRing.rotation.z+=0.01;
+  evacRing.material.opacity=0.4+Math.abs(Math.sin(performance.now()*0.002))*0.25;
+  rotorParts.forEach(function(r){r.rotation.y+=0.3;});
+  renderer.render(scene,cam);
+})();
+applyCam();
+</script>
+</body></html>

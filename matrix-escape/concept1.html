@@ -1,0 +1,49 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;background:#000}</style></head><body>
+<canvas id="c" width="720" height="1280"></canvas>
+<script>
+var c=document.getElementById('c'),x=c.getContext('2d');
+var W=720,H=1280;
+// 背景深色(餐厅暗部)
+var bg=x.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#1c1206');bg.addColorStop(.55,'#0e0a05');bg.addColorStop(1,'#060403');
+x.fillStyle=bg;x.fillRect(0,0,W,H);
+// 顶部暖金穹顶光(水晶灯辉光)
+var glow=x.createRadialGradient(360,200,40,360,200,560);
+glow.addColorStop(0,'rgba(255,214,140,.95)');glow.addColorStop(.4,'rgba(255,180,90,.45)');glow.addColorStop(1,'rgba(255,160,70,0)');
+x.fillStyle=glow;x.fillRect(0,0,W,900);
+// 大厅透视墙面(两侧斜线, 中央消失点)
+x.strokeStyle='rgba(255,190,110,.5)';x.lineWidth=6;
+x.beginPath();x.moveTo(60,380);x.lineTo(300,760);x.moveTo(660,380);x.lineTo(420,760);x.stroke();
+// 天花横梁(透视)
+x.strokeStyle='rgba(255,200,120,.28)';x.lineWidth=3;
+for(var i=0;i<6;i++){var t=i/6;x.beginPath();x.moveTo(90+t*40,360+t*120);x.lineTo(630-t*40,360+t*120);x.stroke();}
+// 水晶吊灯(垂坠光点)
+function lamp(cx,cy,s){
+  x.strokeStyle='rgba(255,220,150,.7)';x.lineWidth=3*s;x.beginPath();x.moveTo(cx,cy-90*s);x.lineTo(cx,cy);x.stroke();
+  var lg=x.createRadialGradient(cx,cy,2,cx,cy,60*s);lg.addColorStop(0,'rgba(255,240,200,1)');lg.addColorStop(.3,'rgba(255,200,110,.8)');lg.addColorStop(1,'rgba(255,180,80,0)');
+  x.fillStyle=lg;x.beginPath();x.arc(cx,cy,60*s,0,7);x.fill();
+  x.fillStyle='rgba(255,255,220,.95)';
+  for(var k=0;k<8;k++){var a=k/8*6.28;x.beginPath();x.arc(cx+Math.cos(a)*22*s,cy+Math.sin(a)*22*s,3.5*s,0,7);x.fill();}
+}
+lamp(360,300,1.5);lamp(150,330,1.1);lamp(570,330,1.1);
+// 地面(透视梯形, 暖木色反光)
+x.fillStyle='#2a1c0c';x.beginPath();x.moveTo(60,760);x.lineTo(660,760);x.lineTo(520,H);x.lineTo(200,H);x.closePath();x.fill();
+// 地面反光(吊灯倒影)
+var fr=x.createLinearGradient(0,760,0,H);fr.addColorStop(0,'rgba(255,190,100,.35)');fr.addColorStop(1,'rgba(255,190,100,0)');
+x.fillStyle=fr;x.beginPath();x.moveTo(200,760);x.lineTo(520,760);x.lineTo(360,1100);x.closePath();x.fill();
+// 餐桌剪影(前景, 银器香槟反光)
+x.fillStyle='rgba(30,18,8,.95)';x.fillRect(120,900,480,26);
+x.fillStyle='rgba(255,210,130,.5)';x.fillRect(300,900,5,40);x.fillRect(420,900,5,40);
+// 人物剪影(宾客, 盛装, 暖光勾勒)
+function person(px,py,s){
+  x.fillStyle='rgba(8,5,3,.95)';
+  x.beginPath();x.arc(px,py-70*s,20*s,0,7);x.fill();
+  x.fillRect(px-24*s,py-52*s,48*s,90*s);
+  x.fillStyle='rgba(255,200,120,.35)';x.fillRect(px-24*s,py-52*s,48*s,6*s);
+}
+person(300,860,1);person(430,880,1.05);
+// 标题
+x.fillStyle='rgba(255,214,140,.9)';x.font='bold 54px Georgia,serif';x.textAlign='center';
+x.fillText('夜 航',360,180);
+x.font='24px Georgia,serif';x.fillStyle='rgba(255,214,140,.6)';
+x.fillText('THE NIGHT VOYAGE · 1912',360,222);
+</script></body></html>

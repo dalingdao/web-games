@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Titanic 20s 写实叙事 · Director's Cut</title>
+<style>
+  body{margin:0;background:#000;overflow:hidden;font-family:system-ui,sans-serif;color:#eee}
+  canvas{display:block}
+  #ui{position:fixed;left:0;right:0;bottom:0;z-index:10;pointer-events:none}
+  .timeline{height:6px;background:rgba(255,255,255,0.12);border-top:1px solid rgba(255,255,255,0.15)}
+  .track{height:100%;background:linear-gradient(90deg,#ffb060,#ff6030);transform-origin:left;transform:scaleX(0);transition:transform 0.1s linear}
+  .marks{display:flex;height:32px;padding:6px 12px;background:rgba(0,0,0,0.85);border-top:1px solid rgba(255,255,255,0.1)}
+  .mark{flex:1;text-align:center;font-size:11px;color:#9bb;position:relative;cursor:pointer;transition:color 0.2s}
+  .mark::before{content:'';position:absolute;top:0;left:50%;width:1px;height:10px;background:rgba(255,255,255,0.25);transform:translateX(-50%)}
+  .mark:hover,.mark.active{color:#ffb060;font-weight:600}
+  .info{position:fixed;left:16px;top:16px;pointer-events:none;font-size:13px;line-height:1.7;text-shadow:0 0 6px #000;background:rgba(0,0,0,0.5);padding:10px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.08)}
+  .shot-label{font-size:15px;font-weight:700;color:#ffb060;margin-bottom:4px}
+  .timecode{font-variant-numeric:tabular-nums;font-family:ui-monospace,monospace;color:#ccc}
+  .controls{position:fixed;right:16px;top:16px;z-index:20;display:flex;gap:8px;pointer-events:auto}
+  .btn{background:rgba(20,30,40,0.9);border:1px solid rgba(255,255,255,0.15);color:#eee;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:all 0.2s}
+  .btn:hover{background:rgba(40,60,80,0.95);border-color:#ffb060;color:#ffb060}
+  .btn.playing{background:#ffb060;color:#000;border-color:#ffb060}
+  .exposure{position:fixed;left:16px;bottom:50px;z-index:20;pointer-events:auto;background:rgba(0,0,0,0.8);padding:12px 16px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:12px;color:#eee;font-size:12px}
+  .exposure label{white-space:nowrap}
+  .exposure input{width:180px}
+  .loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#ffb060;font-size:18px;z-index:100;text-shadow:0 0 8px #000}
+  .error{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#ff4040;font-size:16px;z-index:100;text-shadow:0 0 8px #000;background:rgba(0,0,0,0.9);padding:20px;border-radius:8px;max-width:80%;text-align:center}
+</style>
+</head>
+<body>
+<div id="loading" class="loading">加载资源中…</div>
+<div id="ui" style="display:none">
+  <div class="timeline"><div class="track" id="track"></div></div>
+  <div class="marks" id="marks"></div>
+</div>
+<div class="info" id="info" style="display:none"></div>
+<div class="controls" style="display:none">
+  <button class="btn" id="btnPlay">▶ 播放</button>
+  <button class="btn" id="btnPause">⏸ 暂停</button>
+  <button class="btn" id="btnRestart">↺ 重播</button>
+  <button class="btn" id="btnRec">🎥 录像(快手MP4)</button>
+  <span id="recStatus" style="color:#ffb060;font-size:11px;align-self:center"></span>
+</div>
+<div class="exposure" style="display:none">
+  <label>曝光 <input type="range" id="expSlider" min="0.5" max="3.0" step="0.05" value="1.6"></label>
+  <span id="expVal">1.60</span>
+  <label>雾密 <input type="range" id="fogSlider" min="0.002" max="0.03" step="0.001" value="0.008"></label>
+  <span id="fogVal">0.008</span>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/GLTFLoader.js"></script>
+<script>
+// ========== Config ==========
+const W = 720, H = 1280;
+const SHOT_DURATION = 5;
+const TOTAL_TIME = 20;
+
+// ========== Render Setup ==========
+const out = document.createElement('canvas');
+out.width = W; out.height = H;
+document.body.appendChild(out);
+const octx = out.getContext('2d');
+
+const glc = document.createElement('canvas');
+glc.width = W; glc.height = H;
+const renderer = new THREE.WebGLRenderer({canvas: glc, antialias: true, preserveDrawingBuffer: true});
+renderer.setSize(W, H, false);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.6;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+// ========== Scene ==========
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b1422);
+
+const cam = new THREE.PerspectiveCamera(55, W / H, 0.1, 800);
+
+// ========== STUDIO LIGHTING ==========
+const ambient = new THREE.AmbientLight(0x3a4a5e, 1.2);
+scene.add(ambient);
+
+const moon = new THREE.DirectionalLight(0xc8dfff, 3.5);
+moon.position.set(-50, 80, -30);
+moon.castShadow = true;
+moon.shadow.mapSize.set(2048, 2048);
+moon.shadow.camera.near = 5;
+moon.shadow.camera.far = 250;
+moon.shadow.camera.left = -80;
+moon.shadow.camera.right = 80;
+moon.shadow.camera.top = 80;
+moon.shadow.camera.bottom = -80;
+moon.shadow.bias = -0.0005;
+scene.add(moon);
+
+const fill = new THREE.DirectionalLight(0x5a8acc, 1.8);
+fill.position.set(60, 40, 50);
+scene.add(fill);
+
+const warmSide = new THREE.DirectionalLight(0xffb860, 2.2);
+warmSide.position.set(30, 25, -40);
+scene.add(warmSide);
+
+const rim = new THREE.DirectionalLight(0xffd080, 1.5);
+rim.position.set(-20, 30, 60);
+scene.add(rim);
+
+const alarm = new THREE.PointLight(0xff2a1a, 0, 300);
+alarm.castShadow = true;
+alarm.shadow.camera.near = 1;
+alarm.shadow.camera.far = 300;
+scene.add(alarm);
+
+const impact = new THREE.DirectionalLight(0xfff0c0, 0);
+scene.add(impact);
+
+// Stars
+(function(){
+  const g = new THREE.BufferGeometry(), p = [];
+  for(let i=0;i<500;i++) p.push((Math.random()-0.5)*500, 100+Math.random()*300, (Math.random()-0.5)*500);
+  g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({color:0xdfeeff, size:0.7, sizeAttenuation:true, transparent:true, opacity:0.8})));
+})();
+
+// ========== SEA ==========
+const seaGeo = new THREE.PlaneGeometry(800, 800, 100, 100);
+const seaMat = new THREE.MeshStandardMaterial({
+  color: 0x102035,
+  roughness: 0.15,
+  metalness: 0.9
+});
+// GPU vertex waves (real-time water)
+seaMat.onBeforeCompile = shader => {
+  shader.uniforms.uTime = { value: 0 };
+  seaMat.userData.shader = shader;
+  shader.vertexShader = 'uniform float uTime;\n' + shader.vertexShader.replace(
+    '#include <begin_vertex>',
+    `#include <begin_vertex>
+     float wx = position.x, wy = position.y;
+     float wv = sin(wx*0.35 + uTime*1.3)*0.16
+              + sin(wy*0.28 - uTime*0.95)*0.13
+              + sin((wx+wy)*0.14 + uTime*0.55)*0.18;
+     transformed.z += wv;`
+  );
+};
+const sea = new THREE.Mesh(seaGeo, seaMat);
+sea.rotation.x = -Math.PI/2;
+sea.receiveShadow = true;
+scene.add(sea);
+
+(function(){
+  const pos = seaGeo.attributes.position;
+  for(let i=0;i<pos.count;i++){
+    const x = pos.getX(i), y = pos.getY(i);
+    pos.setZ(i,
+      Math.sin(x*0.1 + y*0.22)*0.35 +
+      Math.sin(x*0.06 - y*0.15)*0.22 +
+      Math.sin(x*0.18 + y*0.08)*0.12
+    );
+  }
+  pos.needsUpdate = true;
+  seaGeo.computeVertexNormals();
+})();
+
+// ========== PARTICLES ==========
+function makeParticles(n, color, size, box){
+  const g = new THREE.BufferGeometry(), p = [], v = [];
+  for(let i=0;i<n;i++){
+    p.push(box.x + (Math.random()-0.5)*box.w, box.y + (Math.random()-0.5)*box.h, box.z + (Math.random()-0.5)*box.d);
+    v.push((Math.random()-0.5)*6, (Math.random()+0.3)*3, (Math.random()-0.5)*6);
+  }
+  g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+  const m = new THREE.Points(g, new THREE.PointsMaterial({color, size, transparent:true, opacity:0.95, sizeAttenuation:true}));
+  g.setAttribute('vel', new THREE.Float32BufferAttribute(v, 3));
+  return m;
+}
+const iceP = makeParticles(500, 0xe8f4ff, 0.6, {x:30,y:2,z:-20,w:12,h:10,d:12});
+iceP.visible = false; scene.add(iceP);
+const waterP = makeParticles(400, 0x8ad0f0, 0.7, {x:0,y:0,z:12,w:60,h:4,d:20});
+waterP.visible = false; scene.add(waterP);
+
+// ========== LIFEBOAT ==========
+const lbGeo = new THREE.CylinderGeometry(2.4, 1.8, 8, 10, 1, false, 0, Math.PI);
+const lbMat = new THREE.MeshStandardMaterial({color:0x2a3842, roughness:0.45, metalness:0.4});
+const lifeboat = new THREE.Mesh(lbGeo, lbMat);
+lifeboat.rotation.z = Math.PI/2; lifeboat.rotation.y = 0.25;
+lifeboat.position.set(-7, 1.2, 30);
+lifeboat.castShadow = true; lifeboat.receiveShadow = true;
+lifeboat.visible = false; scene.add(lifeboat);
+
+const mistGeo = new THREE.PlaneGeometry(160, 35);
+const mistMat = new THREE.MeshBasicMaterial({color:0xb0c8e0, transparent:true, opacity:0.08, depthWrite:false});
+const mist = new THREE.Mesh(mistGeo, mistMat);
+mist.rotation.x = -Math.PI/2; mist.position.set(-8, 0.6, 36);
+mist.visible = false; scene.add(mist);
+
+// ========== SILHOUETTE PEOPLE (high-detail, with poses) ==========
+const personMat = new THREE.MeshStandardMaterial({color:0x1a2028, roughness:0.8, metalness:0.05});
+const coatMat  = new THREE.MeshStandardMaterial({color:0x22262e, roughness:0.9, metalness:0.0}); // 大衣
+const dressMat = new THREE.MeshStandardMaterial({color:0x2a2e34, roughness:0.85, metalness:0.0}); // 长裙
+
+// High-detail humanoid: head(features)/neck/shoulders/chest/waist/arms(2seg)/legs(2seg)/feet
+function human(scale=1, opts={}){
+  const g = new THREE.Group();
+  const skin = opts.skin || personMat;
+  const cloth = opts.cloth || coatMat;
+  // Head (slightly oval + face hint)
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.5,18,16), skin);
+  head.position.y=3.55; head.scale.set(0.94,1.08,0.88); head.castShadow=true; g.add(head);
+  // Hair cap
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.52,16,12,0,Math.PI*2,0,Math.PI*0.62), skin);
+  hair.position.y=3.6; hair.scale.set(0.95,1.0,0.9); g.add(hair);
+  // Neck
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.17,0.2,0.45,10), skin);
+  neck.position.y=3.08; g.add(neck);
+  // Shoulders (wide)
+  const shoulder = new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,0.22,12), cloth);
+  shoulder.position.y=2.92; shoulder.scale.set(1.35,1,0.78); shoulder.castShadow=true; g.add(shoulder);
+  // Chest (broad → taper to waist)
+  const chest = new THREE.Mesh(new THREE.CylinderGeometry(0.46,0.34,1.15,12), cloth);
+  chest.position.y=2.28; chest.scale.set(1.18,1,0.75); chest.castShadow=true; g.add(chest);
+  // Waist/hip
+  const hip = new THREE.Mesh(new THREE.CylinderGeometry(0.34,0.38,0.5,10), cloth);
+  hip.position.y=1.55; hip.scale.set(1.1,1,0.78); g.add(hip);
+  // Arms: upper(shoulder->elbow) + forearm(elbow->hand), poseable via group rotation
+  function arm(side){
+    const a = new THREE.Group();
+    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.13,0.75,10), cloth);
+    upper.position.y=-0.4; upper.castShadow=true; a.add(upper);
+    const elbow = new THREE.Group(); elbow.position.y=-0.82;
+    const fore = new THREE.Mesh(new THREE.CylinderGeometry(0.125,0.1,0.68,10), cloth);
+    fore.position.y=-0.34; fore.castShadow=true; elbow.add(fore);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.13,10,8), skin);
+    hand.position.y=-0.72; elbow.add(hand);
+    a.add(elbow);
+    a.position.set(0.58*side, 2.9, 0);
+    a.rotation.z = 0.12*side;
+    g.add(a);
+    return {group:a, elbow};
+  }
+  const armL = arm(-1), armR = arm(1);
+  // Legs: thigh + calf + foot, poseable
+  function leg(side){
+    const l = new THREE.Group();
+    const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.16,0.85,10), cloth);
+    thigh.position.y=-0.42; thigh.castShadow=true; l.add(thigh);
+    const knee = new THREE.Group(); knee.position.y=-0.85;
+    const calf = new THREE.Mesh(new THREE.CylinderGeometry(0.155,0.11,0.8,10), cloth);
+    calf.position.y=-0.4; calf.castShadow=true; knee.add(calf);
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.12,0.42), skin);
+    foot.position.set(0,-0.84,0.12); knee.add(foot);
+    l.add(knee);
+    l.position.set(0.22*side, 1.66, 0);
+    g.add(l);
+    return {group:l, knee};
+  }
+  const legL = leg(-1), legR = leg(1);
+  g.scale.setScalar(scale);
+  g.userData = {head, hair, armL, armR, legL, legR};
+  return g;
+}
+
+// ---- POSES (肢体语言 / emotion) ----
+// Lookout points toward iceberg (right arm raised, fore-arm extended)
+function posePoint(h){
+  const r = h.userData.armR;
+  r.group.rotation.z = -1.5;   // raise arm up-forward
+  r.group.rotation.x = -0.4;
+  r.elbow.rotation.x = 0.3;
+  const l = h.userData.armL;
+  l.group.rotation.z = 0.25;
+}
+// Deck couple embracing (arms around each other, heads together)
+function poseHug(h1, h2){
+  h1.userData.armR.group.rotation.z = -0.9; h1.userData.armR.elbow.rotation.x = -0.9;
+  h1.userData.armL.group.rotation.z = 0.6;  h1.userData.armL.elbow.rotation.x = -0.5;
+  h2.userData.armL.group.rotation.z = 0.9;  h2.userData.armL.elbow.rotation.x = -0.9;
+  h2.userData.armR.group.rotation.z = -0.6; h2.userData.armR.elbow.rotation.x = -0.5;
+  h1.rotation.z = 0.06; h2.rotation.z = -0.06;
+  h1.position.x -= 0.25; h2.position.x += 0.25;
+}
+// Mother holds baby (arms cradle), head looks back toward ship
+function poseHoldBaby(h, baby){
+  h.userData.armL.group.rotation.z = 0.9; h.userData.armL.elbow.rotation.x = -1.3;
+  h.userData.armR.group.rotation.z = -0.9; h.userData.armR.elbow.rotation.x = -1.3;
+  baby.position.set(0, 1.0, 0.45); // held at chest
+}
+// Standing natural
+function poseStand(h){
+  h.userData.armL.group.rotation.z = 0.12; h.userData.armR.group.rotation.z = -0.12;
+}
+// Arms spread wide (classic Jack & Rose bow pose)
+function poseArmsOut(h){
+  h.userData.armL.group.rotation.z = 1.4;  h.userData.armL.group.rotation.x = 0.0;
+  h.userData.armR.group.rotation.z = -1.4; h.userData.armR.group.rotation.x = 0.0;
+}
+// Face direction toward a point (turn head/body)
+function faceToward(h, tx, tz){
+  const dx = tx - h.position.x, dz = tz - h.position.z;
+  h.rotation.y = Math.atan2(dx, dz);
+}
+
+// Lookout at bow (ship bow is near Z≈2, ice side), pointing to iceberg
+const lookout = human(1.05);
+lookout.position.set(0, 6.4, 2);
+lookout.rotation.y = Math.PI;
+posePoint(lookout);
+scene.add(lookout);
+
+// Classic Titanic bridge: Jack & Rose arms spread at the bow (Night Sail shot)
+const jack = human(0.85);
+jack.position.set(-1.2, 6.4, 2); jack.rotation.y = Math.PI; poseArmsOut(jack); scene.add(jack);
+const rose = human(0.8);
+rose.position.set(1.2, 6.4, 2); rose.rotation.y = Math.PI; poseArmsOut(rose); scene.add(rose);
+
+// Deck passengers: mixed poses (couple embracing, others standing/looking)
+const deckPeople = [];
+(function(){
+  for(let i=0;i<7;i++){
+    const isCouple = (i===2 || i===3); // pair 3&4 embrace
+    const p = human(0.8, {cloth: (i%2? dressMat : coatMat)});
+    p.position.set(-15 + i*5, 6.4, 20 + (i%2)*3);
+    p.rotation.y = Math.PI;
+    if(isCouple){ poseHug(p, deckPeople[i-1]); }
+    else { poseStand(p); }
+    scene.add(p); deckPeople.push(p);
+  }
+})();
+
+// Lifeboat: mother holding baby + passenger, looking back at sinking ship
+const boatPeople = [];
+const baby = human(0.32, {skin:personMat, cloth:personMat});
+baby.rotation.y = Math.PI;
+// baby is attached to the mother (boatPeople[0]) below, not scene-level
+(function(){
+  for(let i=0;i<3;i++){
+    const p = human(0.9, {cloth: (i===0? dressMat : coatMat)});
+    p.position.set(-9 + i*2.5, 1.5, 30 - i*0.7);
+    p.rotation.y = Math.PI*0.85;
+    if(i===0){
+      poseHoldBaby(p, baby);
+      p.add(baby);                 // attach baby to mother's chest (local coords)
+      baby.position.set(0, 1.0, 0.45);
+    } else {
+      poseStand(p);
+    }
+    scene.add(p); boatPeople.push(p);
+  }
+})();
+
+// ========== LOAD GLB ==========
+let ship = null, iceberg = null, loaded = 0;
+const loadingEl = document.getElementById('loading');
+const uiEl = document.getElementById('ui');
+const infoEl = document.getElementById('info');
+const controlsEl = document.querySelector('.controls');
+const exposureEl = document.querySelector('.exposure');
+
+function showError(msg){
+  loadingEl.style.display = 'none';
+  const err = document.createElement('div');
+  err.className = 'error';
+  err.textContent = msg;
+  document.body.appendChild(err);
+}
+
+new THREE.GLTFLoader().load('ship.glb', gltf => {
+  ship = gltf.scene;
+  ship.traverse(o => {
+    if(o.isMesh){
+      o.castShadow = true; o.receiveShadow = true;
+      if(o.material){
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        mats.forEach(m => { if(m.color && m.color.r < 0.25) m.color.multiplyScalar(2.2); });
+      }
+    }
+  });
+  scene.add(ship);
+  addWindowLights();
+  checkReady();
+}, undefined, err => {
+  console.error('ship.glb load failed', err);
+  showError('加载 ship.glb 失败：' + err.message);
+});
+
+new THREE.GLTFLoader().load('iceberg.glb', gltf => {
+  iceberg = gltf.scene;
+  iceberg.traverse(o => {
+    if(o.isMesh){
+      o.castShadow = true; o.receiveShadow = true;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      mats.forEach(m => { if(m.color) m.color.multiplyScalar(1.6); });
+    }
+  });
+  scene.add(iceberg);
+  checkReady();
+}, undefined, err => {
+  console.error('iceberg.glb load failed', err);
+  showError('加载 iceberg.glb 失败：' + err.message);
+});
+
+function checkReady(){
+  if(++loaded === 2){
+    loadingEl.style.display = 'none';
+    uiEl.style.display = 'block';
+    infoEl.style.display = 'block';
+    controlsEl.style.display = 'flex';
+    exposureEl.style.display = 'flex';
+    initStudio();
+  }
+}
+
+// Ship window lights
+function addWindowLights(){
+  if(ship.userData.lit) return;
+  ship.userData.lit = true;
+  const wg = new THREE.PlaneGeometry(0.8, 0.9);
+  const wmat = new THREE.MeshStandardMaterial({color:0xffd8a0, emissive:0xffb040, emissiveIntensity:6.0});
+  for(let i=0;i<26;i++){
+    const wm = new THREE.Mesh(wg, wmat.clone());
+    wm.position.set(-24 + i*1.85, 1.8, 5.8); ship.add(wm);
+    const w2 = wm.clone(); w2.position.z = -5.8; w2.rotation.y = Math.PI; ship.add(w2);
+  }
+  const p1 = new THREE.PointLight(0xffc060, 3.0, 80); p1.position.set(-12, 5, 10); p1.castShadow = true; ship.add(p1);
+  const p2 = new THREE.PointLight(0xffc060, 2.5, 80); p2.position.set(12, 5, -10); p2.castShadow = true; ship.add(p2);
+  const p3 = new THREE.PointLight(0xffc060, 2.0, 60); p3.position.set(0, 8, 0); p3.castShadow = true; ship.add(p3);
+}
+
+// ========== SHOT DATA ==========
+const SHOTS = [
+  { cs:[48,15,70], ce:[36,11,50], ls:[0,7,8], le:[0,8,14], ss:[0,0,Math.PI], se:[0,0,Math.PI], warm:3.5, alarm:0, impact:0, name:"夜航 · Night Sail", fog:0.006 },
+  { cs:[48,15,70], ce:[36,11,50], ls:[0,7,8], le:[0,8,14], ss:[0,0,Math.PI], se:[0,0,Math.PI], warm:3.5, alarm:0, impact:0, name:"夜航 · Night Sail", fog:0.006 },
+  { cs:[32,17,42], ce:[23,13,33], ls:[0,3,-75], le:[-14,0,-85], ss:[0,0,Math.PI], se:[0,0,Math.PI], warm:2.2, alarm:2.0, impact:0, name:"瞭望 · Lookout", fog:0.007 },
+  { cs:[48,15,70], ce:[36,11,50], ls:[0,7,8], le:[0,8,14], ss:[0,0,Math.PI], se:[0,0,Math.PI], warm:3.5, alarm:0, impact:0, name:"夜航 · Night Sail", fog:0.006 },
+  { cs:[32,17,42], ce:[23,13,33], ls:[0,3,-75], le:[-14,0,-85], ss:[0,0,Math.PI], se:[0,0,Math.PI], warm:2.2, alarm:2.0, impact:0, name:"瞭望 · Lookout", fog:0.007 },
+  { cs:[48,9,30], ce:[39,6,19], ls:[28,3,-28], le:[33,1,-33], ss:[0,0,Math.PI-0.1], se:[0,0,Math.PI-0.26], warm:1.8, alarm:1.2, impact:4.5, name:"撞击 · Impact", fog:0.008 },
+  { cs:[48,15,70], ce:[36,11,50], ls:[0,7,8], le:[0,8,14], ss:[0,0,Math.PI], se:[0,0,Math.PI], warm:3.5, alarm:0, impact:0, name:"夜航 · Night Sail", fog:0.006 },
+  { cs:[32,17,42], ce:[23,13,33], ls:[0,3,-75], le:[-14,0,-85], ss:[0,0,Math.PI], se:[0,0,Math.PI], warm:2.2, alarm:2.0, impact:0, name:"瞭望 · Lookout", fog:0.007 },
+  { cs:[48,9,30], ce:[39,6,19], ls:[28,3,-28], le:[33,1,-33], ss:[0,0,Math.PI-0.1], se:[0,0,Math.PI-0.26], warm:1.8, alarm:1.2, impact:4.5, name:"撞击 · Impact", fog:0.008 },
+  { cs:[28,5,45], ce:[35,8,31], ls:[0,3,2], le:[0,2,6], ss:[0,0,Math.PI], se:[-4,0.35,Math.PI-0.22], warm:1.5, alarm:0.5, impact:0, name:"进水 · Flooding", fog:0.009 }
+];
+
+// ========== TIMELINE UI ==========
+const marksEl = document.getElementById('marks');
+const trackEl = document.getElementById('track');
+SHOTS.forEach((s, i) => {
+  const m = document.createElement('div');
+  m.className = 'mark' + (i===0?' active':'');
+  m.textContent = `镜头 ${i+1} · ${s.name}`;
+  m.dataset.index = i;
+  marksEl.appendChild(m);
+});
+
+const btnPlay = document.getElementById('btnPlay');
+const btnPause = document.getElementById('btnPause');
+const btnRestart = document.getElementById('btnRestart');
+const expSlider = document.getElementById('expSlider');
+const expVal = document.getElementById('expVal');
+const fogSlider = document.getElementById('fogSlider');
+const fogVal = document.getElementById('fogVal');
+
+let t0 = 0, currentShot = 0, playing = true, userPaused = false;
+let pausedElapsed = 0; // accumulated elapsed when paused
+
+// Exposure control
+expSlider.addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  renderer.toneMappingExposure = v;
+  expVal.textContent = v.toFixed(2);
+});
+fogSlider.addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  scene.fog.density = v;
+  fogVal.textContent = v.toFixed(3);
+});
+
+// Playback controls
+function setPlaying(state){
+  playing = state;
+  userPaused = !state;
+  btnPlay.classList.toggle('playing', state);
+  btnPause.classList.toggle('playing', !state);
+}
+// Preview audio (real sound effects track, synced to playback)
+let audioCtx = null, audioEl = null;
+function startAudio(){
+  try{
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      audioEl = new Audio('_soundtrack.m4a');
+      audioEl.loop = false;
+      audioEl.play().catch(()=>{});
+    } else {
+      audioCtx.resume();
+      if(audioEl.paused) audioEl.play().catch(()=>{});
+    }
+  }catch(e){}
+}
+btnPlay.addEventListener('click', () => {
+  if(userPaused){
+    // Resume: adjust t0 so elapsed time stays same
+    t0 = performance.now() - pausedElapsed;
+  }
+  startAudio();
+  setPlaying(true);
+});
+btnPause.addEventListener('click', () => {
+  if(playing){
+    pausedElapsed = (performance.now() - t0);
+  }
+  if(audioEl) audioEl.pause();
+  setPlaying(false);
+});
+btnRestart.addEventListener('click', () => {
+  t0 = performance.now();
+  pausedElapsed = 0;
+  startAudio();
+  setPlaying(true);
+});
+
+// Click mark to seek
+function seekToShot(idx){
+  const now = performance.now();
+  t0 = now - idx * SHOT_DURATION * 1000;
+  pausedElapsed = idx * SHOT_DURATION * 1000;
+  updateUINow(idx); // immediate UI refresh
+}
+marksEl.addEventListener('click', e => {
+  const m = e.target.closest('.mark');
+  if(m){
+    const idx = parseInt(m.dataset.index, 10);
+    seekToShot(idx);
+  }
+});
+
+// Recording (Kuaishou-compatible MP4)
+const btnRec = document.getElementById('btnRec');
+const recStatus = document.getElementById('recStatus');
+let mediaRec = null, recChunks = [], recAudioCtx = null, recAudioEl = null;
+
+function pickRecMime(){
+  const candidates = [
+    'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+    'video/mp4;codecs=avc1',
+    'video/mp4',
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm'
+  ];
+  for(const c of candidates){
+    if(window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c;
+  }
+  return 'video/webm';
+}
+
+btnRec.addEventListener('click', async () => {
+  if(mediaRec && mediaRec.state === 'recording'){
+    try{ mediaRec.stop(); }catch(e){}
+    if(recAudioEl){ recAudioEl.pause(); }
+    btnRec.textContent = '🎥 录像(快手MP4)';
+    recStatus.textContent = '⏹ 停止中…';
+    return;
+  }
+  try{
+    t0 = performance.now();
+    pausedElapsed = 0;
+    setPlaying(true);
+    recAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    await recAudioCtx.resume();
+    recAudioEl = new Audio('_soundtrack.m4a');
+    recAudioEl.loop = false;
+    const src = recAudioCtx.createMediaElementSource(recAudioEl);
+    const dest = recAudioCtx.createMediaStreamDestination();
+    src.connect(dest);
+    src.connect(recAudioCtx.destination);
+    recAudioEl.play().catch(()=>{});
+    const vstream = out.captureStream(30);
+    const combined = new MediaStream([...vstream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+    const mime = pickRecMime();
+    mediaRec = new MediaRecorder(combined, { mimeType: mime, videoBitsPerSecond: 4000000, audioBitsPerSecond: 128000 });
+    recChunks = [];
+    mediaRec.ondataavailable = e => { if(e.data && e.data.size > 0) recChunks.push(e.data); };
+    mediaRec.onstop = async () => {
+      const blob = new Blob(recChunks, { type: mime });
+      if(blob.size === 0){ recStatus.textContent = '❌ 录制为空'; btnRec.textContent = '🎥 录像(快手MP4)'; return; }
+      recStatus.textContent = '⬆ 上传转码中…';
+      try{
+        await fetch('/save_webm', { method: 'POST', body: blob });
+        const resp = await fetch('/transcode', { method: 'POST', body: blob });
+        if(resp.ok){
+          const mp4 = await resp.blob();
+          const url = URL.createObjectURL(mp4);
+          const a = document.createElement('a');
+          a.href = url; a.download = 'titanic_kuaishou.mp4';
+          document.body.appendChild(a); a.click(); a.remove();
+          recStatus.textContent = '✅ 快手MP4已生成: H.264+AAC 720×1280 30fps';
+        } else {
+          recStatus.textContent = '❌ 转码失败: ' + (await resp.text()).slice(0, 120);
+        }
+      }catch(err){
+        recStatus.textContent = '❌ 上传失败: ' + err.message;
+      }
+      btnRec.textContent = '🎥 录像(快手MP4)';
+    };
+    mediaRec.start(500);
+    btnRec.textContent = '⏹ 停止';
+    recStatus.textContent = '⏺ 录像中… 20s (快手MP4)';
+    setTimeout(() => {
+      if(mediaRec && mediaRec.state !== 'inactive'){
+        try{ mediaRec.stop(); }catch(e){}
+        if(recAudioEl){ recAudioEl.pause(); }
+        btnRec.textContent = '🎥 录像(快手MP4)';
+      }
+    }, 21000);
+  }catch(err){
+    recStatus.textContent = '❌ 启动失败: ' + err.message;
+    btnRec.textContent = '🎥 录像(快手MP4)';
+  }
+});
+
+// Immediate UI update for seek
+function updateUINow(shotIdx){
+  shotIdx = Math.max(0, Math.min(3, shotIdx));
+  const shot = SHOTS[shotIdx];
+  document.querySelectorAll('.mark').forEach((m, i) => m.classList.toggle('active', i===shotIdx));
+  trackEl.style.transform = `scaleX(${shotIdx * SHOT_DURATION / TOTAL_TIME})`;
+  infoEl.innerHTML = `
+    <div class="shot-label">${shot.name}</div>
+    <div>镜头 ${shotIdx+1} / ${SHOTS.length}</div>
+    <div class="timecode">0.0s / ${SHOT_DURATION}s</div>
+    <div class="timecode">总计 ${(shotIdx * SHOT_DURATION).toFixed(1)}s / ${TOTAL_TIME}s</div>
+  `;
+  scene.fog.density = shot.fog + (parseFloat(fogSlider.value) - 0.008);
+}
+
+// ========== ANIMATION ==========
+function lerp(a,b,t){ return a + (b-a)*t; }
+function ease(t){ return t<0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
+
+function updateUI(t){
+  const pct = Math.min(1, Math.max(0, t / TOTAL_TIME));
+  trackEl.style.transform = `scaleX(${pct})`;
+
+  const si = Math.max(0, Math.min(SHOTS.length - 1, Math.floor(t / SHOT_DURATION)));
+  if(si !== currentShot){
+    currentShot = si;
+    document.querySelectorAll('.mark').forEach((m, i) => m.classList.toggle('active', i===si));
+  }
+
+  const shot = SHOTS[si];
+  const shotTime = t - si * SHOT_DURATION;
+  infoEl.innerHTML = `
+    <div class="shot-label">${shot.name}</div>
+    <div>镜头 ${si+1} / ${SHOTS.length}</div>
+    <div class="timecode">${shotTime.toFixed(1)}s / ${SHOT_DURATION}s</div>
+    <div class="timecode">总计 ${t.toFixed(1)}s / ${TOTAL_TIME}s</div>
+  `;
+
+  scene.fog.density = shot.fog + (parseFloat(fogSlider.value) - 0.008);
+}
+
+function animate(now){
+  if(window.__stop) return; // debug/validation hook: halt loop to free main thread
+  if(!t0) t0 = now;
+  if(playing && !userPaused){
+    const t = (now - t0) / 1000;
+    if(t >= TOTAL_TIME){
+      t0 = now;
+      pausedElapsed = 0;
+    } else {
+      pausedElapsed = now - t0;
+    }
+
+    updateUI(t);
+
+    const si = Math.max(0, Math.min(SHOTS.length - 1, Math.floor(t / SHOT_DURATION)));
+    const s = SHOTS[si];
+    const localT = (t - si * SHOT_DURATION) / SHOT_DURATION;
+    const tt = ease(localT);
+
+    // Camera
+    cam.position.set(lerp(s.cs[0], s.ce[0], tt), lerp(s.cs[1], s.ce[1], tt), lerp(s.cs[2], s.ce[2], tt));
+    cam.lookAt(lerp(s.ls[0], s.le[0], tt), lerp(s.ls[1], s.le[1], tt), lerp(s.ls[2], s.le[2], tt));
+
+    // Ship
+    if(ship){
+      ship.position.set(0, lerp(s.ss[0], s.se[0], tt), 10);
+      ship.rotation.z = lerp(s.ss[1], s.se[1], tt);
+      ship.rotation.y = lerp(s.ss[2], s.se[2], tt);
+    }
+
+    // Iceberg
+    if(iceberg){
+      if(si === 1){ iceberg.position.set(-22, -3, -85); iceberg.scale.setScalar(0.8); }
+      else if(si === 2){ iceberg.position.set(32, -3, -42); iceberg.scale.setScalar(1.3); }
+      else { iceberg.position.set(-65, -5, -95); iceberg.scale.setScalar(1.0); }
+    }
+
+    // Lights (lerp for smooth transitions)
+    warmSide.intensity = lerp(warmSide.intensity, s.warm, 0.06);
+    alarm.intensity = s.alarm > 0 ? (0.7 + 0.5 * Math.sin(t * 10)) * s.alarm : 0;
+    impact.intensity = lerp(impact.intensity, s.impact, 0.15);
+
+    // Particles
+    iceP.visible = (si === 2);
+    waterP.visible = (si === 3);
+    lifeboat.visible = (si === 3);
+    mist.visible = (si === 3);
+
+    if(si === 2){
+      const pos = iceP.geometry.attributes.position, vel = iceP.geometry.attributes.vel;
+      for(let i=0;i<pos.count;i++){
+        pos.setX(i, pos.getX(i) + vel.getX(i)*0.02);
+        pos.setY(i, pos.getY(i) - vel.getY(i)*0.02);
+        pos.setZ(i, pos.getZ(i) + vel.getZ(i)*0.02);
+      }
+      pos.needsUpdate = true;
+    }
+    if(si === 3){
+      const pos = waterP.geometry.attributes.position;
+      for(let i=0;i<pos.count;i++) pos.setY(i, pos.getY(i) + 0.07);
+      pos.needsUpdate = true;
+    }
+
+    // Sea waves
+    if(seaMat.userData.shader){ seaMat.userData.shader.uniforms.uTime.value = t; }
+
+    // People (visible per shot + emotional motion)
+    lookout.visible = (si === 0 || si === 1);
+    if(lookout.visible){
+      // Lookout's pointing arm trembles (alarm / fear)
+      lookout.userData.armR.group.rotation.z = -1.5 + Math.sin(t*6)*0.06;
+    }
+    // Classic bridge: Jack & Rose arms spread at the bow (gentle flight sway)
+    jack.visible = (si === 0); rose.visible = (si === 0);
+    if(si === 0){
+      jack.userData.armL.group.rotation.z = 1.4 + Math.sin(t*1.5)*0.08;
+      jack.userData.armR.group.rotation.z = -1.4 - Math.sin(t*1.5)*0.08;
+      rose.userData.armL.group.rotation.z = 1.4 + Math.sin(t*1.5+0.5)*0.08;
+      rose.userData.armR.group.rotation.z = -1.4 - Math.sin(t*1.5+0.5)*0.08;
+    }
+    deckPeople.forEach(p => p.visible = (si === 0));
+    boatPeople.forEach((p, i) => { p.visible = (si === 3); p.rotation.x = Math.sin(t*1.2 + i)*0.06; });
+    baby.visible = (si === 3);
+    if(si === 3){
+      // Mother (boatPeople[0]) cradles baby, head turns back toward sinking ship
+      const mother = boatPeople[0];
+      if(mother.userData.head){
+        mother.userData.head.rotation.y = Math.sin(t*0.6)*0.45 - 0.45;
+        mother.userData.head.rotation.x = -0.12;
+      }
+      // baby stays attached to mother (local coords)
+    }
+
+    // Render
+    renderer.render(scene, cam);
+    postProcess(t, si);
+  }
+  requestAnimationFrame(animate);
+}
+
+// ========== POST PROCESS ==========
+function postProcess(t, si){
+  octx.drawImage(glc, 0, 0, W, H);
+  const img = octx.getImageData(0, 0, W, H);
+  const px = img.data;
+  const cx = W/2, cy = H/2, maxD = Math.sqrt(cx*cx + cy*cy);
+
+  for(let i=0;i<px.length;i+=4){
+    const x = (i/4) % W, y = Math.floor(i/4 / W);
+    const dx = x - cx, dy = y - cy;
+    const dist = Math.sqrt(dx*dx + dy*dy) / maxD;
+    const vignette = Math.pow(1 - 0.32 * Math.pow(dist, 2.0), 1.1);
+
+    const grain = (Math.random() - 0.5) * 10;
+
+    let r = px[i], g = px[i+1], b = px[i+2];
+
+    r = Math.min(255, (r * 1.06 + 8) * vignette + grain);
+    g = Math.min(255, (g * 1.02) * vignette + grain);
+    b = Math.min(255, (b * 0.95 + 4) * vignette + grain);
+
+    px[i] = r; px[i+1] = g; px[i+2] = b;
+  }
+  octx.putImageData(img, 0, 0);
+
+  if(si === 3){
+    const grad = octx.createLinearGradient(0, H*0.5, 0, H*0.85);
+    grad.addColorStop(0, 'rgba(170,200,230,0)');
+    grad.addColorStop(1, 'rgba(170,200,230,0.10)');
+    octx.fillStyle = grad; octx.fillRect(0, 0, W, H);
+  }
+  if(si === 3){
+    const fade = Math.max(0, (t - 52) / 8);
+    if(fade > 0){
+      octx.fillStyle = `rgba(0,0,0,${Math.min(1, fade*1.1)})`;
+      octx.fillRect(0, 0, W, H);
+    }
+  }
+}
+
+// ========== START ==========
+function initStudio(){
+  scene.fog = new THREE.FogExp2(0x0d1a2e, 0.008);
+  cam.position.set(...SHOTS[0].cs);
+  cam.lookAt(...SHOTS[0].ls);
+  t0 = performance.now();
+  requestAnimationFrame(animate);
+}
+</script>
+</body>
+</html>

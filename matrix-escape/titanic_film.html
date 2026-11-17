@@ -1,0 +1,157 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/GLTFLoader.js"></script>
+<script>
+var W=720,H=1280;
+var out=document.createElement('canvas');out.width=W;out.height=H;document.body.appendChild(out);
+var octx=out.getContext('2d'); // 2D 合成画布(后期处理)
+// 离屏 WebGL 渲染目标
+var glc=document.createElement('canvas');glc.width=W;glc.height=H;
+var renderer=new THREE.WebGLRenderer({canvas:glc,antialias:true,preserveDrawingBuffer:true});
+renderer.setSize(W,H,false);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.4;
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+var scene=new THREE.Scene();scene.background=new THREE.Color(0x08111f);
+scene.fog=new THREE.FogExp2(0x0a1a2c,0.016);
+var cam=new THREE.PerspectiveCamera(60,W/H,0.1,600);
+scene.add(new THREE.AmbientLight(0x24364e,0.9));
+var moon=new THREE.DirectionalLight(0xbfd8ff,1.9);moon.position.set(-40,60,-20);scene.add(moon);
+var fill=new THREE.DirectionalLight(0x4a6a8a,0.5);fill.position.set(30,20,40);scene.add(fill);
+var warm=new THREE.PointLight(0xffb060,2.2,140);warm.position.set(0,8,0);scene.add(warm);
+var alarm=new THREE.PointLight(0xff3020,0,200);scene.add(alarm); // 警报红
+var impact=new THREE.DirectionalLight(0xffb060,0);scene.add(impact);
+// 星星
+(function(){var g=new THREE.BufferGeometry(),p=[];for(var i=0;i<400;i++){p.push((Math.random()-0.5)*400,120+Math.random()*200,(Math.random()-0.5)*400);}g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+  scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xcfe0ff,size:0.6,sizeAttenuation:true})));})();
+// 海面
+var sea=new THREE.Mesh(new THREE.PlaneGeometry(600,600,40,40),new THREE.MeshStandardMaterial({color:0x0a1a2e,roughness:0.3,metalness:0.7}));
+sea.rotation.x=-Math.PI/2;sea.receiveShadow=true;scene.add(sea);
+(function(){var pos=sea.geometry.attributes.position;for(var i=0;i<pos.count;i++){pos.setZ(i,Math.sin(pos.getX(i)*0.15+pos.getY(i)*0.3)*0.25);}pos.needsUpdate=true;sea.geometry.computeVertexNormals();})();
+// 碎冰粒子(撞击)
+function pts(n,color,size,box){var g=new THREE.BufferGeometry(),p=[],v=[];
+  for(var i=0;i<n;i++){p.push(box.x+ (Math.random()-0.5)*box.w, box.y+(Math.random()-0.5)*box.h, box.z+(Math.random()-0.5)*box.d);v.push((Math.random()-0.5)*6,(Math.random()+1)*3,(Math.random()-0.5)*6);}
+  g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));var m=new THREE.Points(g,new THREE.PointsMaterial({color:color,size:size,transparent:true,opacity:0.9}));
+  g.setAttribute('vel',new THREE.Float32BufferAttribute(v,3));return m;}
+var iceP=pts(300,0xdcecf8,0.5,{x:30,y:2,z:-20,w:8,h:6,d:8});iceP.visible=false;scene.add(iceP);
+var waterP=pts(250,0x7ab0e0,0.6,{x:0,y:0,z:12,w:40,h:2,d:10});waterP.visible=false;scene.add(waterP);
+// 救生艇(镜头5)
+var lb=new THREE.Mesh(new THREE.CylinderGeometry(2.2,1.6,7,8,1,false,0,Math.PI),new THREE.MeshStandardMaterial({color:0x1c262e,roughness:0.5,metalness:0.5}));
+lb.rotation.z=Math.PI/2;lb.rotation.y=0.2;lb.position.set(-6,1,28);lb.visible=false;scene.add(lb);
+// 人物剪影(写实灵魂: 让"人"成为叙事主体)
+var darkMat=new THREE.MeshStandardMaterial({color:0x0a0c10,roughness:0.95,metalness:0.0});
+function person(s){s=s||1;var g=new THREE.Group();var sp=new THREE.SphereGeometry(0.5,10,8),cy=new THREE.CylinderGeometry(0.38,0.42,1.5,8);
+  var h=new THREE.Mesh(sp,darkMat);h.position.y=3.4;h.castShadow=true;g.add(h);
+  var b=new THREE.Mesh(cy,darkMat);b.position.y=2.35;b.castShadow=true;g.add(b);
+  var l1=new THREE.Mesh(cy,darkMat);l1.scale.set(0.8,0.6,0.8);l1.position.set(-0.18,1.15,0);l1.castShadow=true;g.add(l1);
+  var l2=new THREE.Mesh(cy,darkMat);l2.scale.set(0.8,0.6,0.8);l2.position.set(0.18,1.15,0);l2.castShadow=true;g.add(l2);
+  g.scale.setScalar(s);return g;}
+var lookout=person(1);lookout.position.set(0,6,-26);lookout.rotation.y=Math.PI;scene.add(lookout);
+var deckP=[];
+for(var pi=0;pi<7;pi++){var dp=person(0.75);dp.position.set(-14+pi*4.5,6.6,18+(pi%2)*2);dp.rotation.y=Math.PI;scene.add(dp);deckP.push(dp);}
+var boatP=[];
+for(var bi=0;bi<3;bi++){var bp=person(0.85);bp.position.set(-8+bi*2.2,1.4,28-bi*0.6);bp.rotation.y=Math.PI*0.9;scene.add(bp);boatP.push(bp);}
+// 水雾平面(镜头5 海面薄雾, 电影氛围)
+var mistM=new THREE.Mesh(new THREE.PlaneGeometry(120,26),new THREE.MeshBasicMaterial({color:0x9fb6cc,transparent:true,opacity:0.16,depthWrite:false}));
+mistM.rotation.x=-Math.PI/2;mistM.position.set(-8,0.6,34);mistM.visible=false;scene.add(mistM);
+// 加载GLB
+var ship=null,ice=null,loaded=0;
+// 船窗暖灯(写实灵魂)
+function addLights(){
+  if(ship.userData.lit)return; ship.userData.lit=true;
+  var wg=new THREE.PlaneGeometry(0.75,0.85);
+  for(var i=0;i<24;i++){
+    var wm=new THREE.Mesh(wg,new THREE.MeshStandardMaterial({color:0xffc070,emissive:0xffa040,emissiveIntensity:3.2}));
+    wm.position.set(-22+i*1.9,1.5,5.3); ship.add(wm);
+    var w2=wm.clone(); w2.position.z=-5.3; w2.rotation.y=Math.PI; ship.add(w2);
+  }
+  var p1=new THREE.PointLight(0xffb060,2.0,60);p1.position.set(-10,4,8);ship.add(p1);
+  var p2=new THREE.PointLight(0xffb060,1.4,60);p2.position.set(10,4,-8);ship.add(p2);
+}
+function check(){loaded++;if(loaded<2){return;}start();}
+new THREE.GLTFLoader().load('ship.glb',function(g){ship=g.scene;ship.traverse(function(o){if(o.isMesh){o.castShadow=true;if(o.material&&o.material.color&&o.material.color.r<0.2){o.material.color.multiplyScalar(1.8);}}});scene.add(ship);addLights();check();});
+new THREE.GLTFLoader().load('iceberg.glb',function(g){ice=g.scene;ice.traverse(function(o){if(o.isMesh)o.castShadow=true;});scene.add(ice);check();});
+function lerp(a,b,t){return a+(b-a)*t;}
+function ease(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+// 6镜头(每10s): [camS, camE, lookS, lookE, shipStateS, shipStateE, lights]
+// shipState: [posY, rotZ, rotY]
+var SH=[
+ {cs:[44,13,64],ce:[36,10.5,48],ls:[0,6,6],le:[0,6,10],ss:[0,0,Math.PI],se:[0,0,Math.PI],warm:2.2,alarm:0,impact:0},
+ {cs:[28,15,36],ce:[24,13,32],ls:[0,2,-70],le:[-10,0,-80],ss:[0,0,Math.PI],se:[0,0,Math.PI],warm:1.4,alarm:1.6,impact:0},
+ {cs:[44,7,26],ce:[40,6,20],ls:[25,2,-25],le:[28,1,-28],ss:[0,0,Math.PI-0.1],se:[0,0,Math.PI-0.2],warm:1.2,alarm:0.8,impact:3},
+ {cs:[25,4,40],ce:[28,6,30],ls:[0,2,0],le:[0,1,4],ss:[0,0,Math.PI],se:[-2,0.25,Math.PI-0.15],warm:1.0,alarm:0.3,impact:0},
+ {cs:[-10,4,40],ce:[-12,3.5,38],ls:[-5,2,27],le:[-5,2,28],ss:[0,0,Math.PI],se:[0,0.12,Math.PI-0.1],warm:2.0,alarm:0,impact:0},
+ {cs:[-20,3,46],ce:[-24,3,50],ls:[0,0,8],le:[0,-4,10],ss:[0,0,Math.PI],se:[-9,-0.35,Math.PI-0.1],warm:0.15,alarm:0,impact:0}
+];
+var t0=null,rec,started=false,recStarted=false;
+function start(){
+  // 镜头3/5 显示对象
+  stream=out.captureStream(30);
+  rec=new MediaRecorder(stream,{mimeType:'video/webm'});
+  var chunks=[];rec.ondataavailable=function(e){chunks.push(e.data);};
+  rec.onstop=function(){var b=new Blob(chunks,{type:'video/webm'});fetch('/save_webm',{method:'POST',body:b}).then(function(){window.__done=true;});};
+  rec.start();
+  setTimeout(function(){try{if(rec.state!=='inactive')rec.stop();}catch(e){}},62000); // 兜底
+  t0=performance.now();
+  requestAnimationFrame(anim);
+}
+function anim(now){
+  if(!isFinite(now))now=performance.now(); // 保证有效时间戳(修复 now 未定义→NaN)
+  if(!isFinite(t0))t0=performance.now();   // 兜底: t0 未初始化
+  var t=(now-t0)/1000;
+  if(!isFinite(t)){try{rec.stop();}catch(e){}return;} // 仍异常则停
+  if(t<0)t=0;                               // 微小负偏移→钳0(修复 SH[负数]崩溃)
+  if(t>=60){try{rec.stop();}catch(e){}return;}
+  var si=Math.floor(t/10);if(si<0)si=0;if(si>5)si=5;var s=SH[si],tt=ease((t-si*10)/10);
+  // 相机运镜
+  cam.position.set(lerp(s.cs[0],s.ce[0],tt),lerp(s.cs[1],s.ce[1],tt),lerp(s.cs[2],s.ce[2],tt));
+  cam.lookAt(lerp(s.ls[0],s.le[0],tt),lerp(s.ls[1],s.le[1],tt),lerp(s.ls[2],s.le[2],tt));
+  // 船状态
+  ship.position.set(0,lerp(s.ss[0],s.se[0],tt),10);
+  ship.rotation.z=lerp(s.ss[1],s.se[1],tt);
+  ship.rotation.y=lerp(s.ss[2],s.se[2],tt);
+  // 冰山(镜头2/3 近, 其他远)
+  if(si===1){ice.position.set(-20,-3,-80);ice.scale.setScalar(0.7);}
+  else if(si===2){ice.position.set(30,-3,-40);ice.scale.setScalar(1.2);}
+  else {ice.position.set(-60,-4,-90);ice.scale.setScalar(1.0);}
+  // 灯光
+  warm.intensity=lerp(warm.intensity,s.warm,0.1);
+  alarm.intensity=s.alarm>0?(0.6+0.6*Math.sin(t*8))*s.alarm:0;
+  impact.intensity=s.impact;
+  // 粒子
+  iceP.visible=(si===2);waterP.visible=(si===3);
+  if(si===2){var pos=iceP.geometry.attributes.position,vel=iceP.geometry.attributes.vel;for(var i=0;i<pos.count;i++){pos.setX(i,pos.getX(i)+vel.getX(i)*0.02);pos.setY(i,pos.getY(i)-vel.getY(i)*0.02);pos.setZ(i,pos.getZ(i)+vel.getZ(i)*0.02);}pos.needsUpdate=true;}
+  if(si===3){var wp=waterP.geometry.attributes.position;for(var j=0;j<wp.count;j++){wp.setY(j,wp.getY(j)+0.05);}wp.needsUpdate=true;}
+  lb.visible=(si===4);mistM.visible=(si===4);
+  // 人物可见性: 镜头1甲板乘客+瞭望员, 镜头5救生艇人物
+  lookout.visible=(si===0||si===1);
+  for(var di=0;di<deckP.length;di++)deckP[di].visible=(si===0);
+  for(var bj=0;bj<boatP.length;bj++)boatP[bj].visible=(si===4);
+  // 人物随船倾斜/进水微动
+  if(si===4){for(var bk=0;bk<boatP.length;bk++){boatP[bk].rotation.x=Math.sin(t*1.5+bk)*0.08;}}
+  // 沉没黑幕(最后渐黑)
+  renderer.render(scene,cam);
+  post(t,si);
+  requestAnimationFrame(anim);
+}
+// 电影级后期: 暗角+颗粒+青橙色调分级
+function post(t,si){
+  octx.drawImage(glc,0,0,W,H);
+  var d=octx.getImageData(0,0,W,H),px=d.data;
+  var cx=W/2,cy=H/2,maxD=Math.sqrt(cx*cx+cy*cy);
+  for(var i=0;i<px.length;i+=4){
+    var x=(i/4)%W,y=Math.floor(i/4/W),dx=x-cx,dy=y-cy;
+    var v=Math.pow(1-0.42*Math.pow(Math.sqrt(dx*dx+dy*dy)/maxD,2.2),1.4); // 暗角
+    var g=(Math.random()-0.5)*16; // 颗粒
+    var r=px[i],gg=px[i+1],b=px[i+2];
+    // 青橙分级: 提冷暗部、暖高光
+    px[i]  =Math.min(255,(r*1.06+6)*v+g);
+    px[i+1]=Math.min(255,(gg*1.0)*v+g);
+    px[i+2]=Math.min(255,(b*0.94+4)*v+g);
+  }
+  octx.putImageData(d,0,0);
+  // 镜头5 海面雾光渐变
+  if(si===4){var grad=octx.createLinearGradient(0,H*0.55,0,H*0.8);grad.addColorStop(0,'rgba(160,185,210,0)');grad.addColorStop(1,'rgba(160,185,210,0.18)');octx.fillStyle=grad;octx.fillRect(0,0,W,H);}
+  // 沉没黑幕(镜头6 末尾)
+  if(si===5){var fade=Math.max(0,(t-52)/8);if(fade>0){octx.fillStyle='rgba(0,0,0,'+Math.min(1,fade*1.1)+')';octx.fillRect(0,0,W,H);}}
+}
+</script></body></html>

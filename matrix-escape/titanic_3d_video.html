@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Titanic 3D写实风格 - 20秒视频</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: 'Microsoft YaHei', sans-serif;
+    }
+    h1 {
+      color: #fff;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      text-shadow: 0 0 20px rgba(255,255,255,0.5);
+    }
+    .video-container {
+      position: relative;
+      width: 720px;
+      height: 1280px;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0,0,0,0.8);
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .title {
+      color: #fff;
+      font-size: 2.2em;
+      text-align: center;
+      text-shadow: 0 0 15px rgba(255,255,255,0.8);
+    }
+    .subtitle {
+      color: #ccc;
+      font-size: 1.2em;
+      margin-top: 15px;
+      text-align: center;
+    }
+    .welcome {
+      color: #ffd700;
+      font-size: 1.5em;
+      margin-top: 20px;
+    }
+    /* 控制按钮组 */
+    .controls {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 20;
+    }
+    .control-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    .control-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+    .control-btn.active {
+      background: rgba(102,126,234,0.6);
+      border-color: rgba(102,126,234,0.8);
+    }
+  </style>
+</head>
+<body>
+  <h1>🎬 Titanic 3D写实风格 - 20秒视频</h1>
+  
+  <div class="controls">
+    <button class="control-btn active" onclick="toggleAudio()">🎵 音效: ON</button>
+    <button class="control-btn" onclick="toggleFullscreen()">⛶ 全屏</button>
+    <button class="control-btn" onclick="toggleInfo()">ℹ️ 信息</button>
+  </div>
+  
+  <div class="video-container">
+    <video id="video" playsinline autoplay muted loop>
+      <source src="http://192.168.1.8:8022/titanic_3d_video.mp4" type="video/mp4">
+      浏览器不支持 video 元素。
+    </video>
+    <div class="overlay">
+      <div>
+        <div class="title">《泰坦尼克号》</div>
+        <div class="subtitle">3D写实风格 - 20秒叙事视频</div>
+        <div class="welcome">欢迎观看！</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let audioEnabled = true;
+    let infoShown = false;
+    
+    function toggleAudio() {
+      const video = document.getElementById('video');
+      if (audioEnabled) {
+        video.muted = true;
+        audioEnabled = false;
+        console.log('音效已静音');
+      } else {
+        video.muted = false;
+        audioEnabled = true;
+        console.log('音效已开启');
+      }
+      updateButtonStates();
+    }
+    
+    function toggleFullscreen() {
+      const video = document.getElementById('video');
+      if (!document.fullscreenElement) {
+        video.requestFullscreen().catch(err => {
+          console.log('全屏请求失败:', err);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    
+    function toggleInfo() {
+      infoShown = !infoShown;
+      updateButtonStates();
+      if (infoShown) {
+        showInfoPanel();
+      } else {
+        hideInfoPanel();
+      }
+    }
+    
+    function showInfoPanel() {
+      const infoHtml = `
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                    background: rgba(0,0,0,0.9); color: white; padding: 30px; 
+                    border-radius: 15px; max-width: 80%; z-index: 30;
+                    border: 2px solid rgba(255,255,255,0.3);">
+          <h2 style="margin-top: 0;">视频信息</h2>
+          <p><strong>视频类型:</strong> 3D写实风格</p>
+          <p><strong>时长:</strong> 20秒</p>
+          <p><strong>内容:</strong> Titanic船头Jack & Rose张臂飞翔经典场景</p>
+          <p><strong>技术:</strong> 写实渲染，动态海浪，天气系统</p>
+          <p><strong>特效:</strong> 星空、月亮、风粒子、暗角</p>
+          <button onclick="toggleInfo()" style="margin-top: 20px; padding: 10px 20px; 
+                   background: rgba(102,126,234,0.6); color: white; border: none; 
+                   border-radius: 8px; cursor: pointer;">关闭</button>
+        </div>
+      `;
+      const overlay = document.querySelector('.overlay');
+      overlay.insertAdjacentHTML('beforeend', infoHtml);
+    }
+    
+    function hideInfoPanel() {
+      const overlay = document.querySelector('.overlay');
+      const infoPanel = overlay.querySelector('div[style]');
+      if (infoPanel) {
+        infoPanel.remove();
+      }
+    }
+    
+    function updateButtonStates() {
+      const buttons = document.querySelectorAll('.control-btn');
+      buttons[0].classList.toggle('active', audioEnabled);
+    }
+    
+    const video = document.getElementById('video');
+    video.addEventListener('loadeddata', () => {
+      console.log('3D视频已加载');
+    });
+    video.addEventListener('error', (e) => {
+      console.error('3D视频加载失败:', e);
+    });
+    
+    document.addEventListener('fullscreenchange', () => {
+      console.log('全屏状态:', document.fullscreenElement ? '已全屏' : '非全屏');
+    });
+  </script>
+</body>
+</html>

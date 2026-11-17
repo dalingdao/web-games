@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>下一关场景设计 · 撤离战术区</title>
+<style>
+  body{margin:0;background:#0a0f0a;color:#dfe8df;font-family:'Microsoft YaHei',sans-serif;padding:30px}
+  h1{color:#4ae84a;text-shadow:0 0 12px rgba(74,232,74,.5);letter-spacing:2px}
+  h2{color:#a8e8a8;border-bottom:1px solid #2a5a2a;padding-bottom:8px;margin-top:34px}
+  .wrap{max-width:960px;margin:0 auto}
+  .grid{display:flex;gap:20px;flex-wrap:wrap;margin-top:20px}
+  .card{flex:1;min-width:260px;background:rgba(20,40,20,.4);border:1px solid #2a5a2a;border-radius:12px;padding:20px}
+  .card h3{margin:0 0 10px;color:#7dff9a;font-size:17px}
+  .card ul{margin:0;padding-left:20px;line-height:1.9;font-size:14px}
+  .rank{display:flex;gap:12px;margin:8px 0;align-items:center;background:rgba(10,25,10,.5);padding:10px 14px;border-radius:8px;border:1px solid #1e3e1e;font-size:14px}
+  .rank .n{color:#ffd54f;font-weight:700;min-width:26px}
+  .rank .g{flex:1}
+  .tag{display:inline-block;background:#1a3a1a;border:1px solid #4ae84a;color:#7dff9a;border-radius:14px;padding:2px 12px;font-size:12px;margin:2px}
+  .note{background:rgba(255,213,79,.08);border-left:3px solid #ffd54f;padding:12px 16px;border-radius:6px;font-size:13px;color:#e8d9a8;margin-top:20px}
+  .flow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:16px 0}
+  .step{background:#123312;border:1px solid #2a5a2a;padding:8px 14px;border-radius:8px;font-size:13px;color:#b8e8b8}
+  .arrow{color:#4ae84a}
+  code{background:#0e1e0e;padding:2px 6px;border-radius:4px;color:#7dff9a;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🎮 下一关场景设计 · 撤离战术区（Exit Tactical Zone）</h1>
+<p style="color:#8a9a8a">黑客帝国走廊枪战 → 下一关：<b style="color:#7dff9a">从矩阵系统撤离到室外战区</b></p>
+
+<h2>📊 网络最热门游戏调查（Steam 全球畅销榜）</h2>
+<div class="rank"><span class="n">1</span><span class="g">Phantom Blade Zero（动作 RPG）</span></div>
+<div class="rank"><span class="n">2</span><span class="g">Apex Legends（战术射击）</span></div>
+<div class="rank"><span class="n">3</span><span class="g">PUBG: Battlegrounds（大逃杀）</span></div>
+<div class="rank"><span class="n">4</span><span class="g">Delta Force（战术撤离 FPS）</span></div>
+<div class="rank"><span class="n">5</span><span class="g">Call of Duty: MW4 / Warzone（军事 FPS）</span></div>
+<div class="rank"><span class="n">6</span><span class="g">Counter-Strike 2（战术 FPS）</span></div>
+<div class="rank"><span class="n">7</span><span class="g">Escape from Tarkov（撤离射击）</span></div>
+<div class="rank"><span class="n">8</span><span class="g">Crimson Desert（开放世界动作）</span></div>
+<p style="font-size:13px;color:#6a8a6a">趋势：<b style="color:#7dff9a">战术射击 + 撤离（Extraction）玩法</b> 占据前列 —— PUBG/Delta Force/CoD/CS2/Tarkov 均为射击撤离类。</p>
+
+<h2>🎯 设计方向（基于热门趋势）</h2>
+<div class="grid">
+  <div class="card"><h3>🏗 场景主题</h3>
+    <ul>
+      <li><b>室外战区</b>：从矩阵走廊破门而出</li>
+      <li>废弃集装箱营地 + 混凝土掩体</li>
+      <li>夜战月光 + 红色信号弹</li>
+      <li>地面碎砖、管线、铁丝网</li>
+    </ul>
+  </div>
+  <div class="card"><h3>🎬 玩法设计</h3>
+    <ul>
+      <li><b>撤离模式</b>：击败守卫 → 开启撤离点</li>
+      <li>敌人：守卫 / 狙击手 / 精英盾兵</li>
+      <li>限时 90 秒抵达直升机撤离点</li>
+      <li>掩体推进 + 战术走位</li>
+    </ul>
+  </div>
+  <div class="card"><h3>🌆 视觉风格</h3>
+    <ul>
+      <li>矩阵绿 → 战区暖橙 + 月光蓝</li>
+      <li>红色撤离信号弹（动态）</li>
+      <li>爆炸火光 + 烟雾颗粒</li>
+      <li>地面网格消失，换废墟质感</li>
+    </ul>
+  </div>
+</div>
+
+<h2>🗺 关卡流程</h2>
+<div class="flow">
+  <div class="step">出生点<br><small>矩阵走廊出口</small></div><span class="arrow">→</span>
+  <div class="step">破门而出<br><small>室外战区</small></div><span class="arrow">→</span>
+  <div class="step">击败守卫×4<br><small>波次1</small></div><span class="arrow">→</span>
+  <div class="step">击败狙击手×2<br><small>波次2</small></div><span class="arrow">→</span>
+  <div class="step">精英盾兵<br><small>BOSS</small></div><span class="arrow">→</span>
+  <div class="step">撤离点开启<br><small>直升机降落</small></div><span class="arrow">→</span>
+  <div class="step">抵达撤离<br><small>获胜</small></div>
+</div>
+
+<h2>🔧 技术规格</h2>
+<div class="grid">
+  <div class="card"><h3>场景元素</h3>
+    <ul>
+      <li>地面：<code>ground.glb</code>（废墟质感）</li>
+      <li>掩体：<code>cover.glb</code> / <code>crate.glb</code> / <code>barrel.glb</code></li>
+      <li>新元素：集装箱（程序化 Box）</li>
+      <li>灯光：月光 Directional + 信号弹 Point</li>
+    </ul>
+  </div>
+  <div class="card"><h3>玩法机制</h3>
+    <ul>
+      <li>波次导演：沿用 <code>DIR</code> 状态机</li>
+      <li>撤离点：直升机 + 地面光圈</li>
+      <li>限时 90s（延长）</li>
+      <li>胜利：抵达撤离光圈</li>
+    </ul>
+  </div>
+  <div class="card"><h3>性能</h3>
+    <ul>
+      <li>复用现有 glb 模型</li>
+      <li>程序化几何体（低多边形）</li>
+      <li>PCF 阴影 256px</li>
+      <li>保持 60fps 自适应</li>
+    </ul>
+  </div>
+</div>
+
+<div class="note">📌 <b>设计说明</b>：本关是上一关（矩阵走廊）的续章 —— 玩家从矩阵系统"苏醒"逃出，进入室外战区，采用热门游戏的<b>撤离（Extraction）玩法</b>。场景为通用军事废墟设计（不复制任何版权游戏元素），需你确认设计方向后再接入游戏代码。</div>
+</div>
+</body>
+</html>

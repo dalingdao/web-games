@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><defs>
+<linearGradient id="w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#101c14"/><stop offset="1" stop-color="#060d08"/></linearGradient>
+<linearGradient id="hl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00ff66"/><stop offset="1" stop-color="#00cc55"/></linearGradient>
+</defs>
+<!-- 深色金属墙基面(暗, 电影感) -->
+<rect width="256" height="256" fill="url(#w)"/>
+<!-- 金属板拼缝 -->
+<g stroke="#020604" stroke-width="3" fill="none"><line x1="0" y1="64" x2="256" y2="64"/><line x1="0" y1="128" x2="256" y2="128"/><line x1="0" y1="192" x2="256" y2="192"/><line x1="128" y1="0" x2="128" y2="256"/></g>
+<!-- 绿色发光管线(矩阵数据流) -->
+<rect x="24" y="0" width="6" height="256" fill="url(#hl)" fill-opacity="0.5"/>
+<rect x="180" y="0" width="4" height="256" fill="url(#hl)" fill-opacity="0.3"/>
+<rect x="232" y="0" width="3" height="256" fill="url(#hl)" fill-opacity="0.2"/>
+<!-- 金属铆钉 -->
+<g fill="#12241a" stroke="#00ff66" stroke-opacity="0.15" stroke-width="1"><circle cx="32" cy="32" r="4"/><circle cx="96" cy="32" r="4"/><circle cx="160" cy="32" r="4"/><circle cx="224" cy="32" r="4"/><circle cx="32" cy="96" r="4"/><circle cx="96" cy="96" r="4"/><circle cx="160" cy="96" r="4"/><circle cx="224" cy="96" r="4"/><circle cx="32" cy="160" r="4"/><circle cx="96" cy="160" r="4"/><circle cx="160" cy="160" r="4"/><circle cx="224" cy="160" r="4"/></g>
+<!-- 磨损高光斑 -->
+<ellipse cx="200" cy="70" rx="30" ry="10" fill="#0f241a" fill-opacity="0.4"/>
+<ellipse cx="60" cy="190" rx="24" ry="8" fill="#0f241a" fill-opacity="0.3"/>
+<!-- 底部暗色踢脚/警示(调暗电影感) -->
+<rect x="0" y="236" width="256" height="20" fill="#0a140e"/>
+<g fill="#1a2a20"><rect x="0" y="236" width="16" height="20" transform="skewX(-20)"/><rect x="32" y="236" width="16" height="20" transform="skewX(-20)"/><rect x="64" y="236" width="16" height="20" transform="skewX(-20)"/><rect x="96" y="236" width="16" height="20" transform="skewX(-20)"/><rect x="128" y="236" width="16" height="20" transform="skewX(-20)"/><rect x="160" y="236" width="16" height="20" transform="skewX(-20)"/><rect x="192" y="236" width="16" height="20" transform="skewX(-20)"/><rect x="224" y="236" width="16" height="20" transform="skewX(-20)"/></g>
+</svg>

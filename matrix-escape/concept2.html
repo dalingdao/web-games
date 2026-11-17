@@ -1,0 +1,58 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;background:#000}</style></head><body>
+<canvas id="c" width="720" height="1280"></canvas>
+<script>
+var c=document.getElementById('c'),x=c.getContext('2d');
+var W=720,H=1280;
+// 夜空渐变(深蓝黑, 冷调)
+var sky=x.createLinearGradient(0,0,0,700);sky.addColorStop(0,'#05070d');sky.addColorStop(.6,'#0a1524');sky.addColorStop(1,'#13263a');
+x.fillStyle=sky;x.fillRect(0,0,W,700);
+// 星星
+for(var i=0;i<90;i++){var sx=Math.random()*W,sy=Math.random()*420;x.fillStyle='rgba(200,220,255,'+(0.2+Math.random()*0.6)+')';x.fillRect(sx,sy,2,2);}
+// 月光(冷白辉光)
+var moon=x.createRadialGradient(180,150,20,180,150,400);moon.addColorStop(0,'rgba(200,225,255,.85)');moon.addColorStop(.25,'rgba(150,190,240,.4)');moon.addColorStop(1,'rgba(150,190,240,0)');
+x.fillStyle=moon;x.fillRect(0,0,W,600);
+// 海面(暗蓝)
+var sea=x.createLinearGradient(0,700,0,H);sea.addColorStop(0,'#0c1a2b');sea.addColorStop(.4,'#0a1523');sea.addColorStop(1,'#04070d');
+x.fillStyle=sea;x.fillRect(0,700,W,H-700);
+// 海面月光反光(波光)
+x.fillStyle='rgba(160,200,250,.18)';
+for(var r=0;r<40;r++){var wx=140+Math.random()*120,wy=710+Math.random()*500;x.fillRect(wx,wy,3+Math.random()*14,2);}
+// 冰山(白色多边形, 冷光, 右侧前景)
+function iceberg(bx,by,sc){
+  x.fillStyle='rgba(200,225,245,.95)';
+  x.beginPath();x.moveTo(bx-260*sc,by+120*sc);
+  x.lineTo(bx-120*sc,by-180*sc);x.lineTo(bx-60*sc,by-60*sc);x.lineTo(bx,by-260*sc);
+  x.lineTo(bx+70*sc,by-90*sc);x.lineTo(bx+180*sc,by+30*sc);x.lineTo(bx+260*sc,by+140*sc);
+  x.closePath();x.fill();
+  // 冰面阴影(立体感)
+  x.fillStyle='rgba(120,160,200,.5)';
+  x.beginPath();x.moveTo(bx-60*sc,by-60*sc);x.lineTo(bx,by-260*sc);x.lineTo(bx+70*sc,by-90*sc);x.lineTo(bx,by);x.closePath();x.fill();
+  // 冰缘高光
+  x.strokeStyle='rgba(255,255,255,.85)';x.lineWidth=3;x.beginPath();x.moveTo(bx,by-260*sc);x.lineTo(bx-120*sc,by-180*sc);x.stroke();
+}
+iceberg(560,840,1.05);
+// 巨轮船体(左侧, 深色轮廓 + 灯光窗 + 烟囱, 倾斜撞击)
+x.save();
+x.translate(120,760);x.rotate(-0.16);
+// 船体
+x.fillStyle='#0b0d12';x.beginPath();
+x.moveTo(-60,-180);x.lineTo(430,-120);x.lineTo(400,40);x.lineTo(-90,40);x.closePath();x.fill();
+// 船艏尖锐
+x.beginPath();x.moveTo(-90,40);x.lineTo(-160,-60);x.lineTo(-60,-180);x.closePath();x.fill();
+// 船舷灯光窗(暖黄, 一排)
+for(var w=0;w<16;w++){x.fillStyle='rgba(255,190,90,.9)';x.fillRect(-50+w*28,-60,7,9);x.fillStyle='rgba(255,170,70,.3)';x.fillRect(-50+w*28-2,-62,11,13);}
+// 烟囱(深红黑, 倾斜)
+x.fillStyle='#1a0f0d';x.fillRect(120,-260,60,120);x.fillRect(260,-240,60,110);
+x.fillStyle='rgba(255,80,60,.6)';x.fillRect(120,-260,60,18);x.fillRect(260,-240,60,18);
+x.restore();
+// 撞击点(冰船接触, 白蓝冲击光)
+var imp=x.createRadialGradient(430,790,5,430,790,220);imp.addColorStop(0,'rgba(230,245,255,.9)');imp.addColorStop(.3,'rgba(160,210,250,.5)');imp.addColorStop(1,'rgba(160,210,250,0)');
+x.fillStyle=imp;x.beginPath();x.arc(430,790,220,0,7);x.fill();
+// 碎冰飞溅
+for(var s=0;s<60;s++){var a=Math.random()*3.14,sd=40+Math.random()*180;x.fillStyle='rgba(220,240,255,'+(0.4+Math.random()*0.5)+')';x.fillRect(430+Math.cos(a)*sd,790-Math.sin(a)*sd,3+Math.random()*5,3);}
+// 标题
+x.fillStyle='rgba(210,230,255,.9)';x.font='bold 56px Georgia,serif';x.textAlign='center';
+x.fillText('撞 击',360,180);
+x.font='24px Georgia,serif';x.fillStyle='rgba(190,215,250,.6)';
+x.fillText('THE COLLISION · 1912',360,222);
+</script></body></html>
